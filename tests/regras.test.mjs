@@ -63,3 +63,22 @@ test('dado informado pela pessoa: link opcional, mas fonte e data obrigatórias'
   delete p.dados.at(-1).fonte;
   assert.match(validaPedido(p).erros.join('\n'), /falta a fonte/);
 });
+
+test('número falado em partes vira um só ("2 milhões e 500 mil")', () => {
+  const n = numerosDoTexto('Com mais de 2 milhões e 500 mil habitantes, e 3 mil e 40 casas; 1 bilhão, 200 milhões');
+  assert.deepEqual(n.map(x => x.valor), [2500000, 3040, 1200000000]);
+  assert.equal(n[0].limite, 'min');
+  assert.equal(n[0].texto, 'mais de 2 milhões e 500 mil');
+  assert.deepEqual(numerosDoTexto('200 mil, 150 mil e 100 mil').map(x => x.valor), [200000, 150000, 100000]);
+});
+
+test('"mais de", "quase" e "cerca de" só passam se forem verdade e perto do valor', () => {
+  const d = [{ rotulo: 'Fortaleza', valor: 2428708, fonte: 'IBGE', data: '2022' }];
+  const b = t => bateComTabela(numerosDoTexto(t)[0], d);
+  assert.ok(b('mais de 2 milhões e 400 mil'));
+  assert.ok(b('quase 2,5 milhões'));
+  assert.ok(b('cerca de 2,4 milhões'));
+  assert.ok(!b('mais de 2 milhões e 500 mil'), 'falso: 2.428.708 não é mais de 2,5 milhões');
+  assert.ok(!b('menos de 2 milhões'), 'falso');
+  assert.ok(!b('mais de 1 milhão'), 'verdade, mas longe demais do valor');
+});

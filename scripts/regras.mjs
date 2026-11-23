@@ -27,18 +27,65 @@ export function lerNumero(t) {
   return Number(t);
 }
 
-/** Acha os números escritos num texto, já multiplicados por "mil", "milhões" etc. */
+// Palavras antes do número que mudam o sentido: "mais de 2 milhões" é um limite, não o valor exato
+/** @type {[RegExp, string][]} */
+const QUALIFICA = [
+  [/(mais de|acima de|mais que|pelo menos|no m[ií]nimo|ultrapass\w*|passa(?:m|ndo)? de|supera\w*)\s*$/i, 'min'],
+  [/(menos de|abaixo de|menos que|no m[aá]ximo|at[ée])\s*$/i, 'max'],
+  [/(quase)\s*$/i, 'quase'],
+  [/(cerca de|aproximadamente|por volta de|perto de|em torno de|uns|umas|aprox\.)\s*$/i, 'cerca']
+];
+
+/**
+ * Acha os números escritos num texto, já multiplicados por "mil", "milhões" etc.
+ * Junta os números falados em partes ("2 milhões e 500 mil" = 2.500.000) e marca os limites
+ * ("mais de", "menos de", "quase", "cerca de") em n.limite.
+ */
 export function numerosDoTexto(texto) {
-  const achados = [];
-  const re = /(\d[\d.,]*\d|\d)\s*(%|por cento|mil\b|milh(?:ão|ao|ões|oes)\b|bilh(?:ão|ao|ões|oes)\b|trilh(?:ão|ao|ões|oes)\b)?/gi;
-  for (const m of String(texto || '').matchAll(re)) {
+  const t = String(texto || '');
+  const partes = [];
+  const re =
+    /(\d[\d.,]*\d|\d)\s*(%|por cento|mil\b|milh(?:ão|ao|ões|oes)\b|bilh(?:ão|ao|ões|oes)\b|trilh(?:ão|ao|ões|oes)\b)?/gi;
+  for (const m of t.matchAll(re)) {
     let v = lerNumero(m[1]);
     if (!Number.isFinite(v)) continue;
     const suf = m[2] ? semAcento(m[2]) : '';
-    if (MULT[suf]) v *= MULT[suf];
-    achados.push({ texto: m[0].trim(), valor: v, porcento: suf === '%' || suf === 'por cento' });
+    const mult = MULT[suf] || 1;
+    v *= mult;
+    const ini = m.index || 0;
+    partes.push({ ini, fim: ini + m[0].trimEnd().length, valor: v, mult, porcento: suf === '%' || suf === 'por cento' });
   }
-  return achados;
+  // "2 milhões e 500 mil", "1 bilhão, 200 milhões", "3 mil e 40": a parte seguinte é menor que a unidade da anterior
+  const juntas = [];
+  for (const p of partes) {
+    const a = juntas[juntas.length - 1];
+    if (
+      a &&
+      a.mult > 1 &&
+      !a.porcento &&
+      !p.porcento &&
+      p.valor < a.mult &&
+      p.mult < a.mult &&
+      /^\s*(e|,)?\s*$/i.test(t.slice(a.fim, p.ini))
+    ) {
+      a.valor += p.valor;
+      a.mult = p.mult;
+      a.fim = p.fim;
+      continue;
+    }
+    juntas.push({ ...p });
+  }
+  return juntas.map(p => {
+    const antes = t.slice(Math.max(0, p.ini - 25), p.ini);
+    const q = QUALIFICA.find(([r]) => r.test(antes));
+    const qm = q ? q[0].exec(antes) : null;
+    return {
+      texto: (qm ? qm[1] + ' ' : '') + t.slice(p.ini, p.fim),
+      valor: p.valor,
+      porcento: p.porcento,
+      ...(q ? { limite: q[1] } : {})
+    };
+  });
 }
 
 /** Calcula um dado derivado, tipo "(d2 - d1) / d1 * 100". Só aceita ids, números e + - * / ( ).
@@ -90,6 +137,19 @@ const perto = (x, v) => {
 
 /** Um número do texto "bate" com a tabela? (aceita arredondamento de até 1%) */
 export function bateComTabela(n, dados) {
+  // Limites: verdade e perto do valor ("mais de 2,5 milhões" para 2.574.412; não para 2.428.708 nem para 9 milhões)
+  if (n.limite) {
+    const ok = dados.some(d => {
+      const v = d.valor,
+        x = n.valor;
+      if (n.limite === 'min') return v > x && v <= x * 1.25;
+      if (n.limite === 'max') return v < x && v >= x * 0.8;
+      if (n.limite === 'quase') return v < x && v >= x * 0.9;
+      return Math.abs(v - x) <= Math.abs(v) * 0.05; // cerca de: até 5%
+    });
+    // "mais de", "menos de" e "quase" precisam ser verdade: arredondar não salva ("menos de 2 milhões" para 2,4 milhões é falso)
+    if (ok || n.limite !== 'cerca') return ok;
+  }
   for (const d of dados) {
     if (perto(n.valor, d.valor)) return true;
     // Arredondado para inteiro ou uma casa ("6%" ou "6,5%" para 6,47)
@@ -170,7 +230,12 @@ export function validaPedido(p) {
     for (const id of usa || []) if (id && !(id in valores)) e(`${onde}: o dado "${id}" não está na tabela`);
     for (const campo of ['narracao', 'titulo', 'subtitulo', 'texto']) {
       for (const n of numerosDoTexto(c[campo])) {
-        if (!bateComTabela(n, prontos)) e(`${onde}: o número "${n.texto}" não está na tabela de dados`);
+        if (!bateComTabela(n, prontos))
+          e(
+            n.limite
+              ? `${onde}: "${n.texto}" não confere com a tabela (precisa ser verdade e perto do valor)`
+              : `${onde}: o número "${n.texto}" não está na tabela de dados`
+          );
       }
     }
   }
