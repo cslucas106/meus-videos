@@ -25,8 +25,8 @@ import subprocess
 import sys
 
 FPS = 30
-PAUSA = 0.5  # segundos de respiro depois de cada fala
-MIN_CENA = 2.5  # nenhuma cena fica menor que isso
+PAUSA = 0.35  # segundos de respiro depois de cada fala (pouco, para o vídeo ter ritmo)
+MIN_CENA = 2.0  # nenhuma cena fica menor que isso
 FONTES_SEG = 5  # tela final com as fontes, sem voz
 VOZ_PADRAO = "pt-BR-FranciscaNeural"
 
@@ -44,17 +44,19 @@ def duracao(arq):
 
 
 async def fala(texto, voz, velocidade, arq):
-    """Gera o mp3 e devolve as frases com início/fim em segundos."""
+    """Gera o mp3 e devolve as palavras com início/fim em segundos (para a legenda animada)."""
     if os.environ.get("SEM_VOZ"):
-        seg = max(1.0, len(texto.split()) / 2.6)
+        ditas = texto.split()
+        seg = max(1.0, len(ditas) / 2.6)
         roda("ffmpeg", "-y", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", f"{seg:.2f}", "-q:a", "9", arq)
-        return [(0.0, seg, texto)]
+        passo = seg / max(1, len(ditas))
+        return [(i * passo, (i + 0.9) * passo, p) for i, p in enumerate(ditas)]
     import edge_tts
 
     for tentativa in range(3):
         try:
             frases = []
-            com = edge_tts.Communicate(texto, voz, rate=velocidade, boundary="SentenceBoundary")
+            com = edge_tts.Communicate(texto, voz, rate=velocidade, boundary="WordBoundary")
             with open(arq, "wb") as f:
                 async for parte in com.stream():
                     if parte["type"] == "audio":
@@ -77,6 +79,22 @@ def tempo_srt(s):
     return f"{h:02}:{m:02}:{seg:02},{ms:03}"
 
 
+def blocos_legenda(palavras, max_palavras=7, folga=0.35):
+    """Junta palavras em linhas de legenda: até 7 palavras, quebrando em pausa ou pontuação."""
+    linhas, atual = [], []
+    for ini, fim, txt in palavras:
+        if atual and (len(atual) >= max_palavras or ini - atual[-1][1] > folga):
+            linhas.append(atual)
+            atual = []
+        atual.append((ini, fim, txt))
+        if txt.rstrip()[-1:] in ".!?;:":
+            linhas.append(atual)
+            atual = []
+    if atual:
+        linhas.append(atual)
+    return [(l[0][0], l[-1][1], " ".join(p[2] for p in l)) for l in linhas]
+
+
 def silencio(arq, seg):
     roda("ffmpeg", "-y", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", f"{seg:.3f}", arq)
 
@@ -93,9 +111,9 @@ async def so_voz(pedido, pasta, tmp):
         raise SystemExit("O texto da narração precisa ter de 1 a 3000 letras.")
     voz = pedido.get("voz") or VOZ_PADRAO
     bruto = os.path.join(tmp, "voz.mp3")
-    frases = await fala(texto, voz, pedido.get("velocidade") or "+0%", bruto)
+    palavras = await fala(texto, voz, pedido.get("velocidade") or "+0%", bruto)
     roda("ffmpeg", "-y", "-i", bruto, "-c:a", "libmp3lame", "-b:a", "128k", os.path.join(pasta, "narracao.mp3"))
-    grava_srt(pasta, [(ini, fim, txt.strip()) for ini, fim, txt in frases])
+    grava_srt(pasta, blocos_legenda(palavras))
     with open(os.path.join(pasta, "notas.md"), "w", encoding="utf-8") as f:
         f.write(f"**{pedido.get('titulo') or 'Narração'}**\n\nVoz: {voz} · {duracao(bruto):.0f} s\n\n")
         f.write("Arquivos: `narracao.mp3` e `legendas.srt`.\n")
@@ -118,16 +136,21 @@ async def principal(entrada, pasta):
 
     for i, cena in enumerate(pedido["cenas"]):
         mp3 = os.path.join(tmp, f"cena{i}.mp3")
-        frases = await fala(cena["narracao"], voz, velocidade, mp3)
+        palavras = await fala(cena["narracao"], voz, velocidade, mp3)
         voz_seg = duracao(mp3)
         frames = math.ceil(max(MIN_CENA, voz_seg + PAUSA) * FPS)
         exato = frames / FPS
         wav = os.path.join(tmp, f"cena{i}.wav")
         roda("ffmpeg", "-y", "-i", mp3, "-af", f"apad=whole_dur={exato:.3f}", "-t", f"{exato:.3f}", "-ar", "24000", "-ac", "1", wav)
         partes.append(wav)
-        for ini, fim, txt in frases:
+        for ini, fim, txt in blocos_legenda(palavras):
             legendas.append((relogio + ini, relogio + min(fim, exato), txt.strip()))
-        cenas.append({**cena, "frames": frames})
+        nova = {**cena, "frames": frames, "palavras": [[round(a, 3), round(min(b, exato), 3), t] for a, b, t in palavras]}
+        # imagem de fundo: o workflow copia pedidos/<nome>/ para public/fundos/; sem o arquivo, a cena segue sem imagem
+        if nova.get("imagem") and not os.path.exists(os.path.join("public", "fundos", os.path.basename(nova["imagem"]))):
+            print(f"Aviso: a imagem {nova['imagem']} não chegou; a cena {i + 1} fica sem fundo.")
+            nova.pop("imagem")
+        cenas.append(nova)
         print(f"Cena {i + 1}: {voz_seg:.1f}s de voz -> {exato:.1f}s no vídeo")
         relogio += exato
 

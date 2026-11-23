@@ -1,11 +1,23 @@
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/600.css';
+import '@fontsource/inter/700.css';
 import '@fontsource/inter/800.css';
 import { AbsoluteFill, Sequence, useCurrentFrame, useVideoConfig } from 'remotion';
 import { COR } from './estilo.js';
-import { Barras, Fontes, Linha, Numero, Texto, Titulo } from './cenas/index.jsx';
+import { Cena } from './Cena.jsx';
+import { Barras, Comparacao, Fontes, Icones, Linha, Mapa, Numero, Ranking, Texto, Titulo } from './cenas/index.jsx';
 
-const CENAS = { titulo: Titulo, numero: Numero, barras: Barras, linha: Linha, texto: Texto };
+const CENAS = {
+  titulo: Titulo,
+  numero: Numero,
+  barras: Barras,
+  linha: Linha,
+  texto: Texto,
+  ranking: Ranking,
+  comparacao: Comparacao,
+  mapa: Mapa,
+  icones: Icones
+};
 
 const Progresso = () => {
   const frame = useCurrentFrame();
@@ -24,16 +36,33 @@ const Progresso = () => {
   );
 };
 
+/* Fundo que se mexe devagar (sem imagem): duas manchas de cor girando */
+const FundoVivo = () => {
+  const frame = useCurrentFrame();
+  const a = frame / 90;
+  return (
+    <AbsoluteFill
+      style={{
+        background: `radial-gradient(circle at ${50 + 30 * Math.cos(a)}% ${20 + 15 * Math.sin(a)}%, ${COR.destaque}26, transparent 55%),
+          radial-gradient(circle at ${50 - 30 * Math.cos(a * 0.7)}% ${80 - 10 * Math.sin(a * 0.7)}%, #38bdf81c, transparent 50%)`
+      }}
+    />
+  );
+};
+
 export const Video = props => {
   const { fps } = useVideoConfig();
   const dados = Object.fromEntries((props.dados || []).map(d => [d.id, d]));
+  const legenda = props.legenda !== false;
   let inicio = 0;
   const partes = props.cenas.map((c, i) => {
     const dur = c.frames || 4 * fps;
-    const Cena = CENAS[c.tipo] || Texto;
+    const Conteudo = CENAS[c.tipo] || Texto;
     const seq = (
       <Sequence key={i} from={inicio} durationInFrames={dur} name={`${i + 1}. ${c.tipo}`}>
-        <Cena cena={c} dados={dados} />
+        <Cena cena={c} indice={i} legenda={legenda}>
+          <Conteudo cena={c} dados={dados} />
+        </Cena>
       </Sequence>
     );
     inicio += dur;
@@ -41,12 +70,17 @@ export const Video = props => {
   });
   return (
     <AbsoluteFill style={{ background: COR.fundo, color: COR.texto, fontFamily: 'Inter, sans-serif' }}>
-      <AbsoluteFill
-        style={{ background: `radial-gradient(circle at 20% 0%, ${COR.destaque}22, transparent 55%)` }}
-      />
+      <FundoVivo />
       {partes}
       <Sequence from={inicio} name="fontes">
-        <Fontes dados={props.dados || []} titulo={props.titulo} />
+        <Cena cena={{ tipo: 'fontes', transicao: 'subir' }} indice={1} legenda={false}>
+          <Fontes
+            dados={props.dados || []}
+            titulo={props.titulo}
+            temMapa={props.cenas.some(c => c.tipo === 'mapa')}
+            musica={props.musica}
+          />
+        </Cena>
       </Sequence>
       <Progresso />
     </AbsoluteFill>

@@ -4,7 +4,12 @@
 // de mandar o pedido; aqui elas rodam de novo, por garantia.
 
 export const FORMATOS = { vertical: [1080, 1920], horizontal: [1920, 1080] };
-export const TIPOS = ['titulo', 'numero', 'barras', 'linha', 'texto'];
+export const TIPOS = ['titulo', 'numero', 'barras', 'linha', 'texto', 'ranking', 'comparacao', 'mapa', 'icones'];
+export const TRANSICOES = ['deslizar', 'zoom', 'subir', 'corte'];
+export const MUSICAS = ['calma', 'animada', 'nenhuma'];
+export const UFS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ');
+/** quantos dados cada tipo de gráfico aceita: [mínimo, máximo] */
+const LISTAS = { barras: [2, 8], linha: [2, 12], ranking: [3, 10], comparacao: [2, 2], mapa: [1, 27] };
 export const VOZES = [
   'pt-BR-FranciscaNeural',
   'pt-BR-AntonioNeural',
@@ -12,7 +17,7 @@ export const VOZES = [
   'pt-PT-RaquelNeural',
   'pt-PT-DuarteNeural'
 ];
-export const MAX_CENAS = 12;
+export const MAX_CENAS = 24;
 export const MAX_DADOS = 40;
 export const MAX_NARRACAO = 600;
 
@@ -183,6 +188,8 @@ export function validaPedido(p) {
   if (!(p.formato in FORMATOS)) e(`formato deve ser ${Object.keys(FORMATOS).join(' ou ')}`);
   if (p.voz && !VOZES.includes(p.voz)) e(`voz desconhecida: ${p.voz}`);
   if (p.velocidade && !/^[+-]\d{1,2}%$/.test(p.velocidade)) e('velocidade deve ser tipo "+10%" ou "-5%"');
+  if (p.musica != null && !MUSICAS.includes(p.musica)) e(`musica deve ser ${MUSICAS.join(', ')}`);
+  if (p.legenda != null && typeof p.legenda !== 'boolean') e('legenda deve ser true ou false');
 
   const dados = Array.isArray(p.dados) ? p.dados : [];
   if (!Array.isArray(p.dados)) e('falta a tabela de dados (pode ser vazia)');
@@ -224,9 +231,30 @@ export function validaPedido(p) {
     if (!TIPOS.includes(c.tipo)) { e(`${onde}: tipo "${c.tipo}" não existe (use ${TIPOS.join(', ')})`); continue; }
     if (!c.narracao || typeof c.narracao !== 'string') e(`${onde}: falta a narração`);
     else if (c.narracao.length > MAX_NARRACAO) e(`${onde}: narração longa demais (máx. ${MAX_NARRACAO} letras)`);
-    const usa = c.tipo === 'numero' ? [c.dado] : ['barras', 'linha'].includes(c.tipo) ? c.dados : [];
-    if (c.tipo === 'numero' && !c.dado) e(`${onde}: diga qual dado mostrar`);
-    if (['barras', 'linha'].includes(c.tipo) && (!Array.isArray(c.dados) || c.dados.length < 2)) e(`${onde}: o gráfico precisa de pelo menos 2 dados`);
+    const lista = LISTAS[c.tipo];
+    const usa = ['numero', 'icones'].includes(c.tipo) ? [c.dado] : lista ? c.dados : [];
+    if (['numero', 'icones'].includes(c.tipo) && !c.dado) e(`${onde}: diga qual dado mostrar`);
+    if (lista && (!Array.isArray(c.dados) || c.dados.length < lista[0] || c.dados.length > lista[1]))
+      e(
+        lista[0] === lista[1]
+          ? `${onde}: ${c.tipo} precisa de exatamente ${lista[0]} dados`
+          : `${onde}: ${c.tipo} precisa de ${lista[0]} a ${lista[1]} dados`
+      );
+    if (c.transicao != null && !TRANSICOES.includes(c.transicao))
+      e(`${onde}: transição "${c.transicao}" não existe (use ${TRANSICOES.join(', ')})`);
+    if (c.imagem != null && !/^fundo-\d{1,2}\.(jpg|png)$/.test(String(c.imagem))) e(`${onde}: nome de imagem inválido`);
+    if (c.fundo != null && (typeof c.fundo !== 'string' || c.fundo.length > 300))
+      e(`${onde}: a descrição da imagem de fundo deve ter até 300 letras`);
+    const porId = Object.fromEntries(prontos.map(d => [d.id, d]));
+    if (c.tipo === 'mapa')
+      for (const id of c.dados || [])
+        if (porId[id] && !UFS.includes(String(porId[id].uf || '').toUpperCase()))
+          e(`${onde}: o dado "${id}" precisa do campo uf (sigla do estado, ex. CE) para ir no mapa`);
+    if (c.tipo === 'icones' && porId[c.dado]) {
+      const d = porId[c.dado];
+      if (d.unidade !== '%' || d.valor < 0 || d.valor > 100)
+        e(`${onde}: ícones mostram uma porcentagem de 0 a 100 (o dado "${c.dado}" precisa ter unidade "%")`);
+    }
     for (const id of usa || []) if (id && !(id in valores)) e(`${onde}: o dado "${id}" não está na tabela`);
     for (const campo of ['narracao', 'titulo', 'subtitulo', 'texto']) {
       for (const n of numerosDoTexto(c[campo])) {

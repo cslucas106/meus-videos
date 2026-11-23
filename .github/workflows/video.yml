@@ -58,11 +58,15 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq --no-install-recommends ffmpeg
-          pip install --quiet edge-tts==7.3.1
+          pip install --quiet edge-tts==7.3.1 "numpy>=2,<3"
           npm ci --no-audit --no-fund
 
       - name: 1/4 Confere os números do roteiro
-        run: node scripts/verifica.mjs "pedidos/$PEDIDO.json" out/pedido.json
+        run: |
+          node scripts/verifica.mjs "pedidos/$PEDIDO.json" out/pedido.json
+          # imagens de fundo do pedido (pedidos/<nome>/fundo-N.jpg), se houver
+          mkdir -p public/fundos
+          if [ -d "pedidos/$PEDIDO" ]; then cp "pedidos/$PEDIDO"/fundo-*.jpg public/fundos/ 2>/dev/null || true; fi
 
       - name: 2/4 Gera a narração
         run: python scripts/narrar.py out/pedido.json out
@@ -70,10 +74,8 @@ jobs:
       - name: 3/4 Desenha as cenas (Remotion)
         run: npx remotion render src/index.jsx Video out/video-sem-audio.mp4 --props=out/props.json
 
-      - name: 4/4 Junta vídeo e voz
-        run: |
-          ffmpeg -v error -y -i out/video-sem-audio.mp4 -i out/narracao.mp3 \
-            -c:v copy -c:a aac -b:a 160k -shortest out/video.mp4
+      - name: 4/4 Junta vídeo, voz e trilha
+        run: python scripts/juntar.py out
 
       - name: Guarda o vídeo de teste
         if: github.event_name == 'push'
@@ -85,6 +87,8 @@ jobs:
             out/video-sem-audio.mp4
             out/narracao.mp3
             out/legendas.srt
+            out/trilha.mp3
+          if-no-files-found: ignore
           retention-days: 7
 
       - name: Publica no Release
@@ -94,8 +98,9 @@ jobs:
         run: |
           TAG="video-$PEDIDO-$GITHUB_RUN_NUMBER"
           TITULO=$(node -e "console.log(JSON.parse(require('fs').readFileSync('out/pedido.json','utf8')).titulo)")
-          gh release create "$TAG" \
-            out/video.mp4 out/video-sem-audio.mp4 out/narracao.mp3 out/legendas.srt \
+          ARQS="out/video.mp4 out/video-sem-audio.mp4 out/narracao.mp3 out/legendas.srt"
+          [ -f out/trilha.mp3 ] && ARQS="$ARQS out/trilha.mp3"
+          gh release create "$TAG" $ARQS \
             --title "$TITULO" --notes-file out/notas.md --target "$GITHUB_SHA"
           echo "### Pronto: [$TITULO](https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG)" >> "$GITHUB_STEP_SUMMARY"
 

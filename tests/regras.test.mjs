@@ -82,3 +82,23 @@ test('"mais de", "quase" e "cerca de" só passam se forem verdade e perto do val
   assert.ok(!b('menos de 2 milhões'), 'falso');
   assert.ok(!b('mais de 1 milhão'), 'verdade, mas longe demais do valor');
 });
+
+test('cenas novas: ranking, comparação, mapa e ícones conferem os dados que usam', () => {
+  const p = exemplo();
+  assert.deepEqual(validaPedido(p).erros, [], 'o exemplo usa comparação, mapa e ícones');
+  const q = exemplo();
+  q.cenas.push({ tipo: 'ranking', dados: ['fort2022', 'fort2025'], narracao: 'Ranking.' });
+  q.cenas.push({ tipo: 'comparacao', dados: ['fort2022'], narracao: 'Só um.' });
+  q.cenas.push({ tipo: 'mapa', dados: ['fort2022'], narracao: 'Sem estado.' });
+  q.cenas.push({ tipo: 'icones', dado: 'fort2022', narracao: 'Não é porcentagem.' });
+  q.cenas.push({ tipo: 'texto', texto: 'x', narracao: 'x', transicao: 'explosao', imagem: '../segredo.jpg' });
+  q.musica = 'rock';
+  const e = validaPedido(q).erros.join('\n');
+  assert.match(e, /ranking precisa de 3 a 10 dados/);
+  assert.match(e, /comparacao precisa de exatamente 2 dados/);
+  assert.match(e, /precisa do campo uf/);
+  assert.match(e, /ícones mostram uma porcentagem/);
+  assert.match(e, /transição "explosao" não existe/);
+  assert.match(e, /nome de imagem inválido/);
+  assert.match(e, /musica deve ser/);
+});

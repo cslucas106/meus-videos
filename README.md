@@ -13,7 +13,9 @@ Vídeos curtos com **dados públicos** (IBGE, Banco Central, Banco Mundial…), 
      na tabela de dados, com fonte, link e data. Se não estiver, o vídeo não é gerado;
    - **gera a narração** com as vozes grátis do Microsoft Edge (`scripts/narrar.py`). A duração de
      cada cena sai do tempo da fala, então voz e imagem ficam sincronizadas;
-   - **desenha as cenas** com o [Remotion](https://www.remotion.dev) (`src/`);
+   - **desenha as cenas** com o [Remotion](https://www.remotion.dev) (`src/`), com transições, legenda animada e números que
+     aparecem no momento em que a voz fala;
+   - **cria a trilha** (se pedida) e junta tudo (`scripts/juntar.py`);
    - **publica um Release** com 4 arquivos.
 
 | Arquivo | Para quê |
@@ -22,6 +24,7 @@ Vídeos curtos com **dados públicos** (IBGE, Banco Central, Banco Mundial…), 
 | `video-sem-audio.mp4` | só a imagem, para pôr outra voz ou música |
 | `narracao.mp3` | só a voz, separada |
 | `legendas.srt` | legendas frase por frase |
+| `trilha.mp3` | só a música (quando o pedido tem trilha) |
 
 ## O pedido (`pedidos/*.json`)
 
@@ -33,8 +36,14 @@ Veja `pedidos/exemplo.json`. Resumo:
   Um dado pode ser uma conta com outros dados: `"calculo": "(pop2022 - pop2010) / pop2010 * 100"`.
   Um dado que você mesmo informou (a IA não achou nas fontes) leva `"manual": true`: o link fica opcional,
   mas fonte e data continuam obrigatórias, e a tela final avisa "informado por quem fez o vídeo".
-- `cenas`: `titulo`, `numero` (um dado grande), `barras` e `linha` (2 ou mais dados) e `texto`.
-  Toda cena tem `narracao`.
+- `cenas`: `titulo`, `numero`, `comparacao` (2 dados), `ranking` (3 a 10), `barras` (2 a 8), `linha` (evolução),
+  `mapa` (estados, dado com `uf`), `icones` (porcentagem em 100 bonequinhos) e `texto`. Toda cena tem `narracao`.
+  Opcionais por cena: `transicao` (`corte`, `zoom`, `deslizar`, `subir`) e `imagem` (`fundo-1.jpg`, em `pedidos/<nome>/`).
+- `musica`: `animada`, `calma` ou `nenhuma`. A trilha é gerada nota por nota (`scripts/musica.py`), sem direito autoral,
+  e abaixa sozinha quando a voz fala.
+- `legenda`: `true` (padrão) mostra a legenda animada, com a palavra falada acesa.
+
+Veja também `.pocketcode/skills/diretor-de-video.md` (como dar ritmo de vídeo ao roteiro).
 
 No fim do vídeo entra sozinha uma tela com todas as fontes.
 
@@ -61,5 +70,6 @@ Cloudflare do PocketCode.
 
 - Código deste repositório: MIT.
 - [Remotion](https://www.remotion.dev/license): grátis para pessoas físicas e empresas com até 3 pessoas.
+- Mapa do Brasil: [@svg-maps/brazil](https://www.npmjs.com/package/@svg-maps/brazil), CC BY 4.0 (creditado na tela de fontes).
 - Vozes do Edge (edge-tts): serviço da Microsoft sem garantia; use a `narracao.mp3` com bom senso.
 - Dados: cada fonte tem os próprios termos. IBGE, Banco Central e Banco Mundial permitem reutilizar citando a fonte, e o vídeo já mostra as fontes no final.

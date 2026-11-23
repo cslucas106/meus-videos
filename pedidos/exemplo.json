@@ -1,69 +1,94 @@
 {
   "versao": 1,
-  "titulo": "Quantos somos no Brasil?",
+  "titulo": "Fortaleza em números",
   "formato": "vertical",
   "voz": "pt-BR-FranciscaNeural",
   "velocidade": "+0%",
+  "musica": "animada",
+  "legenda": true,
   "dados": [
     {
-      "id": "pop2022",
-      "rotulo": "População do Brasil no Censo 2022",
+      "id": "fort2022",
+      "rotulo": "População de Fortaleza no Censo 2022",
       "rotuloCurto": "Censo 2022",
-      "valor": 203080756,
+      "valor": 2428708,
       "unidade": "habitantes",
       "fonte": "IBGE · Censo 2022",
-      "url": "https://educa.ibge.gov.br/jovens/conheca-o-brasil/populacao/22005-censo-2022-o-retrato-atualizado-do-brasil.html",
-      "data": "2022-08-01"
+      "url": "https://www.ibge.gov.br/cidades-e-estados/ce/fortaleza",
+      "data": "2022"
     },
     {
-      "id": "pop2010",
-      "rotulo": "População do Brasil no Censo 2010",
-      "rotuloCurto": "Censo 2010",
-      "valor": 190755799,
+      "id": "fort2025",
+      "rotulo": "População estimada de Fortaleza em 2025",
+      "rotuloCurto": "Estimativa 2025",
+      "valor": 2578483,
       "unidade": "habitantes",
-      "fonte": "IBGE · Censo 2010",
-      "url": "https://censo2010.ibge.gov.br/",
-      "data": "2010-08-01"
+      "fonte": "IBGE · Estimativas de população",
+      "url": "https://www.ibge.gov.br/cidades-e-estados/ce/fortaleza",
+      "data": "2025"
     },
     {
-      "id": "cresc",
-      "rotulo": "Crescimento da população de 2010 a 2022",
-      "valor": 6.46,
+      "id": "ce2022",
+      "rotulo": "População do Ceará no Censo 2022",
+      "rotuloCurto": "Ceará",
+      "uf": "CE",
+      "valor": 8794957,
+      "unidade": "habitantes",
+      "fonte": "IBGE · Censo 2022",
+      "url": "https://www.ibge.gov.br/cidades-e-estados/ce/",
+      "data": "2022"
+    },
+    {
+      "id": "parte",
+      "rotulo": "Parte dos cearenses que moravam em Fortaleza em 2022",
+      "valor": 27.61,
       "unidade": "%",
       "casas": 1,
-      "calculo": "(pop2022 - pop2010) / pop2010 * 100",
+      "calculo": "fort2022 / ce2022 * 100",
       "fonte": "Cálculo com dados do IBGE",
-      "data": "2022-08-01"
+      "data": "2022"
     }
   ],
   "cenas": [
     {
       "tipo": "titulo",
-      "titulo": "Quantos somos no Brasil?",
-      "subtitulo": "O que dizem os dois últimos censos do IBGE",
-      "narracao": "Quantas pessoas vivem no Brasil? Vamos ver o que dizem os dois últimos censos do IBGE."
+      "titulo": "Fortaleza em números",
+      "subtitulo": "O que dizem o Censo e as estimativas do IBGE",
+      "narracao": "Quantas pessoas vivem em Fortaleza?",
+      "transicao": "corte"
     },
     {
       "tipo": "numero",
-      "dado": "pop2022",
-      "narracao": "No Censo de 2022, o Brasil tinha 203 milhões de habitantes."
+      "dado": "fort2022",
+      "narracao": "No Censo de 2022, eram 2.428.708 habitantes.",
+      "transicao": "zoom"
     },
     {
-      "tipo": "barras",
-      "titulo": "População nos dois censos",
-      "dados": ["pop2010", "pop2022"],
-      "narracao": "Em 2010 eram 190,8 milhões. Em doze anos, a população cresceu."
+      "tipo": "comparacao",
+      "titulo": "Censo e estimativa",
+      "dados": ["fort2022", "fort2025"],
+      "narracao": "E a estimativa do IBGE para 2025 já passa de 2 milhões e 500 mil.",
+      "transicao": "deslizar"
     },
     {
-      "tipo": "numero",
-      "dado": "cresc",
-      "titulo": "Crescimento de 2010 a 2022",
-      "narracao": "Um crescimento de 6,5% no período."
+      "tipo": "mapa",
+      "titulo": "O Ceará inteiro",
+      "dados": ["ce2022"],
+      "narracao": "O Ceará inteiro tinha 8,8 milhões de pessoas no Censo.",
+      "transicao": "subir"
+    },
+    {
+      "tipo": "icones",
+      "dado": "parte",
+      "titulo": "Quantos cearenses moravam na capital",
+      "narracao": "Ou seja: 27,6% dos cearenses moravam na capital.",
+      "transicao": "zoom"
     },
     {
       "tipo": "texto",
-      "texto": "O país continua crescendo, mas cada vez mais devagar.",
-      "narracao": "O país continua crescendo, mas cada vez mais devagar."
+      "texto": "Mais de um em cada quatro cearenses é fortalezense.",
+      "narracao": "Mais de um em cada quatro cearenses é fortalezense.",
+      "transicao": "corte"
     }
   ]
 }
