@@ -15,7 +15,7 @@ permissions:
 jobs:
   voz:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     env:
       PEDIDO: ${{ github.event.inputs.pedido }}
     steps:
@@ -33,7 +33,7 @@ jobs:
           python-version: '3.12'
 
       - name: Instala as ferramentas
-        timeout-minutes: 6
+        timeout-minutes: 9
         run: bash scripts/instala.sh edge-tts==7.3.1
 
       - name: Gera a narração
