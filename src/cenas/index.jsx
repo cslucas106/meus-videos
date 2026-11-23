@@ -227,9 +227,10 @@ export const Fontes = ({ dados, titulo }) => {
   const u = useU();
   const fontes = new Map();
   for (const d of dados) {
-    if (!d.url) continue;
-    const chave = `${d.fonte}|${d.url}`;
-    if (!fontes.has(chave)) fontes.set(chave, { fonte: d.fonte, url: d.url, data: d.data });
+    // contas não têm fonte própria; dados informados por quem fez o vídeo aparecem mesmo sem link
+    if (!d.url && !d.manual) continue;
+    const chave = `${d.fonte}|${d.url || ''}`;
+    if (!fontes.has(chave)) fontes.set(chave, { fonte: d.fonte, url: d.url || '', data: d.data, manual: !!d.manual });
   }
   return (
     <Palco>
@@ -240,11 +241,12 @@ export const Fontes = ({ dados, titulo }) => {
         <div style={{ fontSize: 34 * u, color: COR.suave }}>{titulo}</div>
       </Sobe>
       {[...fontes.values()].map((f, i) => (
-        <Sobe key={f.url} atraso={10 + i * 4}>
+        <Sobe key={`${f.fonte}|${f.url}`} atraso={10 + i * 4}>
           <div style={{ fontSize: 36 * u, lineHeight: 1.3 }}>
             <b>{f.fonte}</b> · {f.data}
             <div style={{ fontSize: 26 * u, color: COR.suave, wordBreak: 'break-all' }}>
-              {f.url.replace(/^https:\/\//, '')}
+              {f.url ? f.url.replace(/^https:\/\//, '') : ''}
+              {f.manual ? (f.url ? ' · ' : '') + 'informado por quem fez o vídeo' : ''}
             </div>
           </div>
         </Sobe>

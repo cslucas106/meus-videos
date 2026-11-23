@@ -31,6 +31,8 @@ Veja `pedidos/exemplo.json`. Resumo:
 - `voz`: `pt-BR-FranciscaNeural`, `pt-BR-AntonioNeural`, `pt-BR-ThalitaMultilingualNeural`, `pt-PT-RaquelNeural`, `pt-PT-DuarteNeural`
 - `dados`: cada um com `id`, `rotulo`, `valor`, `unidade`, `fonte`, `url` e `data`.
   Um dado pode ser uma conta com outros dados: `"calculo": "(pop2022 - pop2010) / pop2010 * 100"`.
+  Um dado que você mesmo informou (a IA não achou nas fontes) leva `"manual": true`: o link fica opcional,
+  mas fonte e data continuam obrigatórias, e a tela final avisa "informado por quem fez o vídeo".
 - `cenas`: `titulo`, `numero` (um dado grande), `barras` e `linha` (2 ou mais dados) e `texto`.
   Toda cena tem `narracao`.
 

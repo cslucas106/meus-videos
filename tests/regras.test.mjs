@@ -52,3 +52,14 @@ test('conta que não bate com o valor informado é barrada', () => {
   p.dados[2].valor = 9;
   assert.match(validaPedido(p).erros.join('\n'), /não bate com a conta/);
 });
+
+test('dado informado pela pessoa: link opcional, mas fonte e data obrigatórias', () => {
+  const p = exemplo();
+  p.dados.push({ id: 'cap', rotulo: 'População do Recife', valor: 1488920, unidade: 'habitantes', fonte: 'IBGE (informado)', data: '2022', manual: true });
+  p.cenas[4].narracao = 'O Recife tem 1,5 milhão de habitantes.';
+  assert.deepEqual(validaPedido(p).erros, []);
+  p.dados.at(-1).url = 'http://inseguro';
+  assert.match(validaPedido(p).erros.join('\n'), /começar com https/);
+  delete p.dados.at(-1).fonte;
+  assert.match(validaPedido(p).erros.join('\n'), /falta a fonte/);
+});

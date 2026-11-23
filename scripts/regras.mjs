@@ -146,6 +146,9 @@ export function validaPedido(p) {
     } else if (typeof d.valor !== 'number' || !Number.isFinite(d.valor)) {
       e(`${onde}: o valor precisa ser um número`);
       continue;
+    } else if (d.manual) {
+      // dado informado pela pessoa: o link é opcional, mas se vier tem de ser https
+      if (d.url && !/^https:\/\//.test(d.url)) e(`${onde}: o link precisa começar com https://`);
     } else if (!d.url || !/^https:\/\//.test(d.url)) {
       e(`${onde}: falta o link https da fonte`);
     }

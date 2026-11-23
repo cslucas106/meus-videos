@@ -149,13 +149,15 @@ async def principal(entrada, pasta):
 
     fontes = {}
     for d in pedido.get("dados", []):
-        if d.get("url"):
-            fontes.setdefault((d["fonte"], d["url"]), []).append(d["rotulo"])
+        if d.get("url") or d.get("manual"):
+            fontes.setdefault((d["fonte"], d.get("url") or ""), []).append(
+                d["rotulo"] + (" (informado por quem fez o vídeo)" if d.get("manual") else "")
+            )
     with open(os.path.join(pasta, "notas.md"), "w", encoding="utf-8") as f:
         f.write(f"**{pedido['titulo']}**\n\n")
         f.write(f"Duração: {relogio + FONTES_SEG:.0f} s · voz: {voz}\n\n### Fontes dos dados\n\n")
         for (fonte, url), rotulos in fontes.items():
-            f.write(f"- [{fonte}]({url}): {', '.join(rotulos)}\n")
+            f.write(f"- [{fonte}]({url}): {', '.join(rotulos)}\n" if url else f"- {fonte}: {', '.join(rotulos)}\n")
         f.write("\nArquivos: `video.mp4` (com narração), `video-sem-audio.mp4`, `narracao.mp3`, `legendas.srt`.\n")
     print(f"Narração pronta: {relogio + FONTES_SEG:.1f} s no total")
 
