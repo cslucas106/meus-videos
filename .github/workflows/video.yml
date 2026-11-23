@@ -1,0 +1,101 @@
+# Gera um vídeo a partir de pedidos/<nome>.json.
+# Quem dispara é o PocketCode AI (ou você, na aba Actions > Gerar vídeo > Run workflow).
+# Não usa nenhuma chave secreta: a voz do Edge é grátis e o Release usa o token
+# automático do próprio GitHub Actions, que só vale para este repositório.
+name: Gerar vídeo
+
+on:
+  # Ao mudar o modelo (cenas, scripts, este workflow), gera o pedidos/exemplo.json como teste.
+  # Nesse caso o vídeo fica só nos "Artifacts" da execução (7 dias), sem Release.
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'pedidos/exemplo.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/video.yml'
+  workflow_dispatch:
+    inputs:
+      pedido:
+        description: 'Nome do pedido (o arquivo pedidos/<nome>.json, sem o .json)'
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: video-${{ github.event.inputs.pedido || 'exemplo' }}
+  cancel-in-progress: true
+
+jobs:
+  video:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PEDIDO: ${{ github.event.inputs.pedido || 'exemplo' }}
+    steps:
+      - name: Confere o nome do pedido
+        run: |
+          if [[ ! "$PEDIDO" =~ ^[a-z0-9][a-z0-9-]{0,59}$ ]]; then
+            echo "::error::Nome inválido. Use só letras minúsculas, números e hífen."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instala as ferramentas
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          pip install --quiet edge-tts==7.3.1
+          npm ci --no-audit --no-fund
+
+      - name: 1/4 Confere os números do roteiro
+        run: node scripts/verifica.mjs "pedidos/$PEDIDO.json" out/pedido.json
+
+      - name: 2/4 Gera a narração
+        run: python scripts/narrar.py out/pedido.json out
+
+      - name: 3/4 Desenha as cenas (Remotion)
+        run: npx remotion render src/index.jsx Video out/video-sem-audio.mp4 --props=out/props.json
+
+      - name: 4/4 Junta vídeo e voz
+        run: |
+          ffmpeg -v error -y -i out/video-sem-audio.mp4 -i out/narracao.mp3 \
+            -c:v copy -c:a aac -b:a 160k -shortest out/video.mp4
+
+      - name: Guarda o vídeo de teste
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-de-teste
+          path: |
+            out/video.mp4
+            out/video-sem-audio.mp4
+            out/narracao.mp3
+            out/legendas.srt
+          retention-days: 7
+
+      - name: Publica no Release
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="video-$PEDIDO-$GITHUB_RUN_NUMBER"
+          TITULO=$(node -e "console.log(JSON.parse(require('fs').readFileSync('out/pedido.json','utf8')).titulo)")
+          gh release create "$TAG" \
+            out/video.mp4 out/video-sem-audio.mp4 out/narracao.mp3 out/legendas.srt \
+            --title "$TITULO" --notes-file out/notas.md --target "$GITHUB_SHA"
+          echo "### Pronto: [$TITULO](https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG)" >> "$GITHUB_STEP_SUMMARY"
+

@@ -1,0 +1,69 @@
+{
+  "versao": 1,
+  "titulo": "Quantos somos no Brasil?",
+  "formato": "vertical",
+  "voz": "pt-BR-FranciscaNeural",
+  "velocidade": "+0%",
+  "dados": [
+    {
+      "id": "pop2022",
+      "rotulo": "População do Brasil no Censo 2022",
+      "rotuloCurto": "Censo 2022",
+      "valor": 203080756,
+      "unidade": "habitantes",
+      "fonte": "IBGE · Censo 2022",
+      "url": "https://educa.ibge.gov.br/jovens/conheca-o-brasil/populacao/22005-censo-2022-o-retrato-atualizado-do-brasil.html",
+      "data": "2022-08-01"
+    },
+    {
+      "id": "pop2010",
+      "rotulo": "População do Brasil no Censo 2010",
+      "rotuloCurto": "Censo 2010",
+      "valor": 190755799,
+      "unidade": "habitantes",
+      "fonte": "IBGE · Censo 2010",
+      "url": "https://censo2010.ibge.gov.br/",
+      "data": "2010-08-01"
+    },
+    {
+      "id": "cresc",
+      "rotulo": "Crescimento da população de 2010 a 2022",
+      "valor": 6.46,
+      "unidade": "%",
+      "casas": 1,
+      "calculo": "(pop2022 - pop2010) / pop2010 * 100",
+      "fonte": "Cálculo com dados do IBGE",
+      "data": "2022-08-01"
+    }
+  ],
+  "cenas": [
+    {
+      "tipo": "titulo",
+      "titulo": "Quantos somos no Brasil?",
+      "subtitulo": "O que dizem os dois últimos censos do IBGE",
+      "narracao": "Quantas pessoas vivem no Brasil? Vamos ver o que dizem os dois últimos censos do IBGE."
+    },
+    {
+      "tipo": "numero",
+      "dado": "pop2022",
+      "narracao": "No Censo de 2022, o Brasil tinha 203 milhões de habitantes."
+    },
+    {
+      "tipo": "barras",
+      "titulo": "População nos dois censos",
+      "dados": ["pop2010", "pop2022"],
+      "narracao": "Em 2010 eram 190,8 milhões. Em doze anos, a população cresceu."
+    },
+    {
+      "tipo": "numero",
+      "dado": "cresc",
+      "titulo": "Crescimento de 2010 a 2022",
+      "narracao": "Um crescimento de 6,5% no período."
+    },
+    {
+      "tipo": "texto",
+      "texto": "O país continua crescendo, mas cada vez mais devagar.",
+      "narracao": "O país continua crescendo, mas cada vez mais devagar."
+    }
+  ]
+}

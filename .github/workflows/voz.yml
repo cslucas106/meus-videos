@@ -1,0 +1,52 @@
+# Só a narração: pedidos/<nome>.json com "tipo": "voz" vira narracao.mp3 + legendas.srt num Release.
+# Quem dispara é o modo Mídia do PocketCode AI. Não usa chave secreta.
+name: Gerar narração
+
+on:
+  workflow_dispatch:
+    inputs:
+      pedido:
+        description: 'Nome do pedido (o arquivo pedidos/<nome>.json, sem o .json)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  voz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PEDIDO: ${{ github.event.inputs.pedido }}
+    steps:
+      - name: Confere o nome do pedido
+        run: |
+          if [[ ! "$PEDIDO" =~ ^[a-z0-9][a-z0-9-]{0,59}$ ]]; then
+            echo "::error::Nome inválido. Use só letras minúsculas, números e hífen."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instala as ferramentas
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          pip install --quiet edge-tts==7.3.1
+
+      - name: Gera a narração
+        run: python scripts/narrar.py "pedidos/$PEDIDO.json" out
+
+      - name: Publica no Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="voz-$PEDIDO-$GITHUB_RUN_NUMBER"
+          TITULO=$(python -c "import json;print(json.load(open('pedidos/$PEDIDO.json'))['titulo'])")
+          gh release create "$TAG" out/narracao.mp3 out/legendas.srt \
+            --title "🎙️ $TITULO" --notes-file out/notas.md --target "$GITHUB_SHA"
+          echo "### Pronto: [$TITULO](https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG)" >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,19 @@
+{
+  "name": "meus-videos",
+  "private": true,
+  "type": "module",
+  "description": "Vídeos com dados públicos, montados pelo PocketCode AI e renderizados com Remotion no GitHub Actions.",
+  "scripts": {
+    "verificar": "node scripts/verifica.mjs",
+    "testar": "node --test tests/*.test.mjs",
+    "estudio": "remotion studio src/index.jsx",
+    "render": "remotion render src/index.jsx Video out/sem-audio.mp4 --props=out/props.json"
+  },
+  "dependencies": {
+    "@fontsource/inter": "^5.2.8",
+    "@remotion/cli": "4.0.546",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "remotion": "4.0.546"
+  }
+}
