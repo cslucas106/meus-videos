@@ -1,0 +1,104 @@
+{
+  "versao": 1,
+  "titulo": "Demografia de Fortaleza: Censo vs Estimativa",
+  "formato": "vertical",
+  "voz": "pt-BR-AntonioNeural",
+  "velocidade": "+0%",
+  "dados": [
+    {
+      "id": "popCenso22",
+      "rotulo": "População (Censo 2022)",
+      "rotuloCurto": "Censo 2022",
+      "valor": 2428708,
+      "unidade": "habitantes",
+      "fonte": "IBGE · Censo 2022",
+      "url": "https://servicodados.ibge.gov.br/api/v3/agregados/4709/periodos/-1/variaveis/93?localidades=N6[2304400]",
+      "data": "2022",
+      "x": "2022"
+    },
+    {
+      "id": "popEst26",
+      "rotulo": "População Estimada 2026",
+      "rotuloCurto": "Estimativa 2026",
+      "valor": 2582360,
+      "unidade": "habitantes",
+      "fonte": "IBGE · Estimativas de População",
+      "url": "https://servicodados.ibge.gov.br/api/v3/agregados/6579/periodos/-1/variaveis/9324?localidades=N6[2304400]",
+      "data": "2026",
+      "x": "2026"
+    },
+    {
+      "id": "crescAbsoluto",
+      "rotulo": "Crescimento Populacional",
+      "valor": 153652,
+      "unidade": "pessoas",
+      "calculo": "popEst26 - popCenso22",
+      "fonte": "Cálculo com dados do IBGE",
+      "data": "2022-2026"
+    },
+    {
+      "id": "crescPerc",
+      "rotulo": "Variação Populacional",
+      "valor": 6.3265,
+      "unidade": "%",
+      "casas": 2,
+      "calculo": "(popEst26 - popCenso22) / popCenso22 * 100",
+      "fonte": "Cálculo com dados do IBGE",
+      "data": "2022-2026"
+    }
+  ],
+  "cenas": [
+    {
+      "tipo": "titulo",
+      "titulo": "Fortaleza em Números",
+      "subtitulo": "Censo 2022 vs Estimativa 2026",
+      "narracao": "Você conhece o tamanho real de Fortaleza? Vamos analisar o que dizem os dados oficiais mais recentes do IBGE."
+    },
+    {
+      "tipo": "numero",
+      "dado": "popCenso22",
+      "titulo": "Censo Demográfico 2022",
+      "narracao": "No Censo de 2022, a contagem oficial registrou 2.428.708 habitantes na capital cearense."
+    },
+    {
+      "tipo": "numero",
+      "dado": "popEst26",
+      "titulo": "Estimativa para 2026",
+      "narracao": "Já a estimativa populacional mais recente para 2026 aponta que a cidade chegou a 2.582.360 pessoas."
+    },
+    {
+      "tipo": "barras",
+      "titulo": "Comparação de Dados",
+      "dados": [
+        "popCenso22",
+        "popEst26"
+      ],
+      "narracao": "Enquanto o Censo é uma contagem detalhada, a estimativa é um cálculo estatístico realizado anualmente pelo IBGE."
+    },
+    {
+      "tipo": "linha",
+      "titulo": "Evolução da População",
+      "dados": [
+        "popCenso22",
+        "popEst26"
+      ],
+      "narracao": "A tendência mostra um crescimento contínuo, reforçando a posição de Fortaleza entre as maiores capitais do país."
+    },
+    {
+      "tipo": "numero",
+      "dado": "crescPerc",
+      "titulo": "Crescimento no Período",
+      "narracao": "Isso representa um aumento de aproximadamente 6,32% na população em um intervalo de apenas quatro anos."
+    },
+    {
+      "tipo": "texto",
+      "texto": "Fortaleza: Gigante do Nordeste.",
+      "narracao": "A capital do Ceará continua sendo um polo de atração demográfica e econômica fundamental para a região."
+    },
+    {
+      "tipo": "texto",
+      "texto": "Fonte: IBGE (Censo 2022 e Estimativas)",
+      "narracao": "Com 2.582.360 habitantes estimados, Fortaleza se consolida como uma das metrópoles mais populosas do Brasil."
+    }
+  ]
+}
