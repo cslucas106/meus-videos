@@ -151,7 +151,9 @@ async def principal(entrada, pasta):
             print(f"Aviso: a imagem {nova['imagem']} não chegou; a cena {i + 1} fica sem fundo.")
             nova.pop("imagem")
         cenas.append(nova)
-        print(f"Cena {i + 1}: {voz_seg:.1f}s de voz -> {exato:.1f}s no vídeo")
+        print(f"Cena {i + 1}: {voz_seg:.1f}s de voz -> {exato:.1f}s no vídeo, {len(palavras)} palavras com tempo")
+        if not palavras:
+            print(f"Aviso: a cena {i + 1} veio sem o tempo das palavras; ela fica sem legenda animada.")
         relogio += exato
 
     final = os.path.join(tmp, "fontes.wav")
