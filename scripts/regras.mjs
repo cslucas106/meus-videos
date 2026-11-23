@@ -42,9 +42,21 @@ const QUALIFICA = [
 ];
 
 /**
+ * Números que não são dado e ficam fora da conferência: ordinais ("1º", "2ª"), séculos ("século 19", "séculos 18 e 19")
+ * e décadas ("anos 90", "anos 1990", "década de 80", "anos 80 e 90").
+ */
+export function naoEDado(t, ini, fim, v) {
+  if (/^[ºª]/.test(t.slice(fim))) return true;
+  const antes = t.slice(Math.max(0, ini - 30), ini);
+  if (/s[ée]culos?\s+(\d+\s*(e|a|,|ao)\s*)?$/i.test(antes)) return true;
+  const decada = Number.isInteger(v) && v % 10 === 0 && (v < 100 || (v >= 1000 && v <= 2100));
+  return decada && /(\banos|d[ée]cadas?\s+de)\s+(\d+\s*(e|a|,|aos)\s*(os\s+)?)?$/i.test(antes);
+}
+
+/**
  * Acha os números escritos num texto, já multiplicados por "mil", "milhões" etc.
  * Junta os números falados em partes ("2 milhões e 500 mil" = 2.500.000) e marca os limites
- * ("mais de", "menos de", "quase", "cerca de") em n.limite.
+ * ("mais de", "menos de", "quase", "cerca de") em n.limite. Ordinais, séculos e décadas ficam de fora (naoEDado).
  */
 export function numerosDoTexto(texto) {
   const t = String(texto || '');
@@ -54,10 +66,11 @@ export function numerosDoTexto(texto) {
   for (const m of t.matchAll(re)) {
     let v = lerNumero(m[1]);
     if (!Number.isFinite(v)) continue;
+    const ini = m.index || 0;
+    if (!m[2] && naoEDado(t, ini, ini + m[1].length, v)) continue;
     const suf = m[2] ? semAcento(m[2]) : '';
     const mult = MULT[suf] || 1;
     v *= mult;
-    const ini = m.index || 0;
     partes.push({ ini, fim: ini + m[0].trimEnd().length, valor: v, mult, porcento: suf === '%' || suf === 'por cento' });
   }
   // "2 milhões e 500 mil", "1 bilhão, 200 milhões", "3 mil e 40": a parte seguinte é menor que a unidade da anterior
@@ -255,7 +268,10 @@ export function validaPedido(p) {
       if (d.unidade !== '%' || d.valor < 0 || d.valor > 100)
         e(`${onde}: ícones mostram uma porcentagem de 0 a 100 (o dado "${c.dado}" precisa ter unidade "%")`);
     }
-    for (const id of usa || []) if (id && !(id in valores)) e(`${onde}: o dado "${id}" não está na tabela`);
+    for (const id of usa || [])
+      if (id && typeof id !== 'string')
+        e(`${onde}: em "dados"/"dado" vai só o id do dado (texto, ex. "pop2022"), não um objeto`);
+      else if (id && !(id in valores)) e(`${onde}: o dado "${id}" não está na tabela`);
     for (const campo of ['narracao', 'titulo', 'subtitulo', 'texto']) {
       for (const n of numerosDoTexto(c[campo])) {
         if (!bateComTabela(n, prontos))

@@ -102,3 +102,19 @@ test('cenas novas: ranking, comparação, mapa e ícones conferem os dados que u
   assert.match(e, /nome de imagem inválido/);
   assert.match(e, /musica deve ser/);
 });
+
+test('ordinais, séculos e décadas não são dado (não são barrados)', () => {
+  for (const t of ['no século 19', 'nos séculos 18 e 19', 'o 1º lugar e a 2ª vez', 'o 21º colocado', 'nos anos 90', 'nos anos 1990 e 2000', 'na década de 80', 'anos 80 e 90'])
+    assert.deepEqual(numerosDoTexto(t), [], t);
+  // continuam sendo conferidos: idade, temperatura, ano solto e "anos 90 mil"
+  for (const t of ['tinha 90 anos', 'fez 30°C', 'em 1904', 'anos 90 mil']) assert.equal(numerosDoTexto(t).length, 1, t);
+});
+
+test('dados da cena como objeto dão erro claro (e não "[object Object]")', () => {
+  const p = exemplo();
+  const c = p.cenas.find(x => Array.isArray(x.dados));
+  c.dados = c.dados.map(id => ({ id }));
+  const erros = validaPedido(p).erros.join('\n');
+  assert.match(erros, /só o id do dado/);
+  assert.doesNotMatch(erros, /object Object/);
+});

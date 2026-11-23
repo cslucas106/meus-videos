@@ -24,12 +24,15 @@ Pense como quem edita um vídeo curto de rede social, não como quem faz slides.
 | `icones` | porcentagem ("38 em cada 100") | `dado` com unidade `%` |
 | `texto` | frase de impacto ou conclusão | `texto` |
 
+Em `dados` e `dado` vão só os ids da tabela, como texto (`"dados": ["pop2010", "pop2022"]`), nunca o dado inteiro.
+
 ## Movimento
 - `transicao` de cada cena: `corte` (rápido, para impacto), `zoom` (revelar número), `deslizar` (passar para o próximo assunto), `subir` (conclusão). Varie.
 - As animações dos números começam quando a voz fala o número: escreva o número na narração da cena que mostra esse número.
 - `fundo` (opcional, até 6 por vídeo): descrição em inglês de uma imagem de fundo para cenas de `titulo` e `texto`, ex. "aerial view of Fortaleza beach at sunset, cinematic". Sem pessoas reais, marcas ou texto na imagem.
 
 ## Som e legenda
+- A voz não tem emoção: não escreva indicações de tom entre colchetes (`[animado]`, `[sussurrando]`); elas são tiradas antes de narrar. Para dar ênfase, use pontuação.
 - `musica`: `animada` (padrão para redes), `calma` (temas sérios) ou `nenhuma`.
 - `legenda`: `true` (padrão). A legenda acende cada palavra junto com a voz.
 

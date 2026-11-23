@@ -21,6 +21,7 @@ import asyncio
 import json
 import math
 import os
+import re
 import subprocess
 import sys
 
@@ -43,8 +44,14 @@ def duracao(arq):
     return float(r.stdout.strip())
 
 
+def sem_colchetes(texto):
+    """Tira indicações entre colchetes, como [raivoso] ou [sussurrando]: as vozes do Edge não têm emoção e liam o colchete como texto."""
+    return re.sub(r"\s{2,}", " ", re.sub(r"\[[^\]]*\]", " ", str(texto or ""))).strip()
+
+
 async def fala(texto, voz, velocidade, arq):
     """Gera o mp3 e devolve as palavras com início/fim em segundos (para a legenda animada)."""
+    texto = sem_colchetes(texto) or "..."
     if os.environ.get("SEM_VOZ"):
         ditas = texto.split()
         seg = max(1.0, len(ditas) / 2.6)
@@ -106,7 +113,7 @@ def grava_srt(pasta, legendas):
 
 
 async def so_voz(pedido, pasta, tmp):
-    texto = str(pedido.get("texto") or "").strip()
+    texto = sem_colchetes(pedido.get("texto"))
     if not texto or len(texto) > 3000:
         raise SystemExit("O texto da narração precisa ter de 1 a 3000 letras.")
     voz = pedido.get("voz") or VOZ_PADRAO
