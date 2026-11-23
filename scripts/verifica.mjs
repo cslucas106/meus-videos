@@ -1,4 +1,4 @@
-// Uso: node scripts/verifica.mjs pedidos/<nome>.json [out/pedido.json]
+// Uso: node scripts/verifica.mjs videos/<nome>/pedido.json [out/pedido.json]
 // Se passar o segundo caminho, grava ali o pedido conferido (com as contas já feitas).
 // Para o GitHub Actions com erro se algum número não estiver na tabela.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -7,7 +7,7 @@ import { validaPedido } from './regras.mjs';
 
 const arq = process.argv[2];
 if (!arq) {
-  console.error('Uso: node scripts/verifica.mjs pedidos/<nome>.json');
+  console.error('Uso: node scripts/verifica.mjs videos/<nome>/pedido.json');
   process.exit(2);
 }
 let pedido;

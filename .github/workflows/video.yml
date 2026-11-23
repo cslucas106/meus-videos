@@ -1,25 +1,25 @@
-# Gera um vídeo a partir de pedidos/<nome>.json.
+# Gera um vídeo a partir de videos/<nome>/pedido.json (imagens de fundo em videos/<nome>/fundos/).
 # Quem dispara é o PocketCode AI (ou você, na aba Actions > Gerar vídeo > Run workflow).
 # Não usa nenhuma chave secreta: a voz do Edge é grátis e o Release usa o token
 # automático do próprio GitHub Actions, que só vale para este repositório.
 name: Gerar vídeo
 
 on:
-  # Ao mudar o modelo (cenas, scripts, este workflow), gera o pedidos/exemplo.json como teste.
+  # Ao mudar o modelo (cenas, scripts, este workflow), gera o videos/exemplo/pedido.json como teste.
   # Nesse caso o vídeo fica só nos "Artifacts" da execução (7 dias), sem Release.
   push:
     branches: [main]
     paths:
       - 'src/**'
       - 'scripts/**'
-      - 'pedidos/exemplo.json'
+      - 'videos/exemplo/**'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/video.yml'
   workflow_dispatch:
     inputs:
       pedido:
-        description: 'Nome do pedido (o arquivo pedidos/<nome>.json, sem o .json)'
+        description: 'Nome do pedido (a pasta videos/<nome>/)'
         required: true
 
 permissions:
@@ -63,10 +63,15 @@ jobs:
 
       - name: 1/4 Confere os números do roteiro
         run: |
-          node scripts/verifica.mjs "pedidos/$PEDIDO.json" out/pedido.json
-          # imagens de fundo do pedido (pedidos/<nome>/fundo-N.jpg), se houver
+          ARQ="videos/$PEDIDO/pedido.json"
+          # app antigo (antes da 1.7.0) ainda grava em pedidos/<nome>.json
+          [ -f "$ARQ" ] || ARQ="pedidos/$PEDIDO.json"
+          node scripts/verifica.mjs "$ARQ" out/pedido.json
+          # imagens de fundo do pedido (videos/<nome>/fundos/fundo-N.jpg), se houver
           mkdir -p public/fundos
-          if [ -d "pedidos/$PEDIDO" ]; then cp "pedidos/$PEDIDO"/fundo-* public/fundos/ 2>/dev/null || true; fi
+          for d in "videos/$PEDIDO/fundos" "pedidos/$PEDIDO"; do
+            [ -d "$d" ] && cp "$d"/fundo-* public/fundos/ 2>/dev/null || true
+          done
 
       - name: 2/4 Gera a narração
         run: python scripts/narrar.py out/pedido.json out
@@ -103,4 +108,11 @@ jobs:
           gh release create "$TAG" $ARQS \
             --title "$TITULO" --notes-file out/notas.md --target "$GITHUB_SHA"
           echo "### Pronto: [$TITULO](https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG)" >> "$GITHUB_STEP_SUMMARY"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+
+      # O LEIAME.md da pasta ganha o link desta versão. Se não der para gravar, o vídeo continua pronto no Release.
+      - name: Atualiza o LEIAME.md
+        if: github.event_name == 'workflow_dispatch' && hashFiles(format('videos/{0}/pedido.json', env.PEDIDO)) != ''
+        continue-on-error: true
+        run: bash scripts/grava-leiame.sh "videos/$PEDIDO" "$TAG"
 

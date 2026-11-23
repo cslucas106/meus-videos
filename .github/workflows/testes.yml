@@ -12,10 +12,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      # inclui tests/estrutura.test.mjs: confere as pastas videos/, audios/ e imagens/ e todos os pedidos de vídeo
       - run: node --test tests/*.test.mjs
-      - name: Confere todos os pedidos
-        run: |
-          for p in pedidos/*.json; do
-            grep -q '"tipo": *"voz"' "$p" && continue  # narração solta não tem tabela
-            node scripts/verifica.mjs "$p"
-          done

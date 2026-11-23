@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { bateComTabela, calcula, lerNumero, numerosDoTexto, validaPedido } from '../scripts/regras.mjs';
 
-const exemplo = () => JSON.parse(readFileSync(new URL('../pedidos/exemplo.json', import.meta.url), 'utf8'));
+const exemplo = () => JSON.parse(readFileSync(new URL('../videos/exemplo/pedido.json', import.meta.url), 'utf8'));
 const dados = [{ id: 'a', rotulo: 'Censo 2022', valor: 203080756, fonte: 'IBGE', data: '2022-08-01' }];
 
 test('lê números do jeito brasileiro', () => {

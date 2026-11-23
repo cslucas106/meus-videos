@@ -153,7 +153,7 @@ async def principal(entrada, pasta):
         for ini, fim, txt in blocos_legenda(palavras):
             legendas.append((relogio + ini, relogio + min(fim, exato), txt.strip()))
         nova = {**cena, "frames": frames, "palavras": [[round(a, 3), round(min(b, exato), 3), t] for a, b, t in palavras]}
-        # imagem de fundo: o workflow copia pedidos/<nome>/ para public/fundos/; sem o arquivo, a cena segue sem imagem
+        # imagem de fundo: o workflow copia videos/<nome>/fundos/ para public/fundos/; sem o arquivo, a cena segue sem imagem
         if nova.get("imagem") and not os.path.exists(os.path.join("public", "fundos", os.path.basename(nova["imagem"]))):
             print(f"Aviso: a imagem {nova['imagem']} não chegou; a cena {i + 1} fica sem fundo.")
             nova.pop("imagem")

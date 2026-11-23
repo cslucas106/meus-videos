@@ -1,4 +1,4 @@
-# Só a narração: pedidos/<nome>.json com "tipo": "voz" vira narracao.mp3 + legendas.srt num Release.
+# Só a narração: audios/<nome>/pedido.json com "tipo": "voz" vira narracao.mp3 + legendas.srt num Release.
 # Quem dispara é o modo Mídia do PocketCode AI. Não usa chave secreta.
 name: Gerar narração
 
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       pedido:
-        description: 'Nome do pedido (o arquivo pedidos/<nome>.json, sem o .json)'
+        description: 'Nome do pedido (a pasta audios/<nome>/)'
         required: true
 
 permissions:
@@ -39,14 +39,31 @@ jobs:
           pip install --quiet edge-tts==7.3.1
 
       - name: Gera a narração
-        run: python scripts/narrar.py "pedidos/$PEDIDO.json" out
+        run: |
+          ARQ="audios/$PEDIDO/pedido.json"
+          # app antigo (antes da 1.7.0) ainda grava em pedidos/<nome>.json
+          [ -f "$ARQ" ] || ARQ="pedidos/$PEDIDO.json"
+          echo "ARQ=$ARQ" >> "$GITHUB_ENV"
+          python scripts/narrar.py "$ARQ" out
 
       - name: Publica no Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="voz-$PEDIDO-$GITHUB_RUN_NUMBER"
-          TITULO=$(python -c "import json;print(json.load(open('pedidos/$PEDIDO.json'))['titulo'])")
+          TITULO=$(python -c "import json,os;print(json.load(open(os.environ['ARQ']))['titulo'])")
           gh release create "$TAG" out/narracao.mp3 out/legendas.srt \
             --title "🎙️ $TITULO" --notes-file out/notas.md --target "$GITHUB_SHA"
           echo "### Pronto: [$TITULO](https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG)" >> "$GITHUB_STEP_SUMMARY"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-node@v4
+        if: hashFiles(format('audios/{0}/pedido.json', env.PEDIDO)) != ''
+        with:
+          node-version: 22
+
+      # O LEIAME.md da pasta ganha o link desta narração. Se não der para gravar, a narração continua pronta no Release.
+      - name: Atualiza o LEIAME.md
+        if: hashFiles(format('audios/{0}/pedido.json', env.PEDIDO)) != ''
+        continue-on-error: true
+        run: bash scripts/grava-leiame.sh "audios/$PEDIDO" "$TAG"
