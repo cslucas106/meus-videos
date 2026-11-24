@@ -1,0 +1,149 @@
+{
+  "versao": 1,
+  "titulo": "O que é a Thelema?",
+  "formato": "vertical",
+  "voz": "pt-BR-AntonioNeural",
+  "velocidade": "+0%",
+  "musica": "calma",
+  "legenda": true,
+  "livre": true,
+  "post": {
+    "texto": "Você conhece a filosofia de Aleister Crowley? A Thelema influenciou músicos, escritores e mudou a forma como muitos veem a liberdade individual. Descubra o que significa o famoso lema da Verdadeira Vontade. Texto escrito com IA, sem fonte conferida.",
+    "hashtags": [
+      "#Thelema",
+      "#AleisterCrowley",
+      "#Ocultismo",
+      "#Filosofia",
+      "#Curiosidades"
+    ]
+  },
+  "dados": [],
+  "cenas": [
+    {
+      "tipo": "titulo",
+      "titulo": "O que é a lei de Thelema?",
+      "subtitulo": "Faze o que tu queres",
+      "narracao": "Você já ouviu a frase: faze o que tu queres, há de ser o todo da lei? Isso é a base da Thelema.",
+      "transicao": "corte",
+      "fundo": "mystical golden symbols on dark background, cinematic, esoteric atmosphere",
+      "imagem": "fundo-1.jpg"
+    },
+    {
+      "tipo": "texto",
+      "texto": "Não é sobre fazer qualquer coisa.",
+      "narracao": "Muitos acham que isso incentiva o caos, mas o conceito é muito mais profundo que o simples desejo.",
+      "transicao": "deslizar",
+      "fundo": "ancient greek parchment texture, elegant typography",
+      "imagem": "fundo-2.jpg"
+    },
+    {
+      "tipo": "texto",
+      "texto": "A vida do profeta.",
+      "narracao": "Tudo começou com Aleister Crowley, que se tornou um dos maiores ocultistas da história moderna.",
+      "transicao": "zoom"
+    },
+    {
+      "tipo": "texto",
+      "texto": "A revelação no Cairo.",
+      "narracao": "A grande virada aconteceu no Egito, durante uma experiência mística com sua esposa.",
+      "transicao": "corte",
+      "fundo": "silhouette of great pyramids at night under a starry sky, mystical blue tones",
+      "imagem": "fundo-3.jpg"
+    },
+    {
+      "tipo": "texto",
+      "texto": "O Livro da Lei.",
+      "narracao": "Crowley afirmou ter recebido este texto sagrado de uma entidade chamada Aiwass.",
+      "transicao": "subir"
+    },
+    {
+      "tipo": "lista",
+      "titulo": "As três divindades",
+      "itens": [
+        "Nuit: a deusa do céu",
+        "Hadit: o ponto central",
+        "Ra-Hoor-Khuit: a criança conquistadora"
+      ],
+      "narracao": "A filosofia se baseia em três divindades egípcias que representam o espaço, a energia e a nova era.",
+      "transicao": "deslizar",
+      "fundo": "abstract egyptian deities artistic representation, gold and lapis lazuli colors",
+      "imagem": "fundo-4.jpg"
+    },
+    {
+      "tipo": "texto",
+      "texto": "A Verdadeira Vontade.",
+      "narracao": "O objetivo de um thelemita é descobrir sua Verdadeira Vontade, que é o seu propósito real no universo.",
+      "transicao": "zoom",
+      "fundo": "a single bright star shining in a deep dark nebula, cinematic cosmic view",
+      "imagem": "fundo-5.jpg"
+    },
+    {
+      "tipo": "texto",
+      "texto": "Amor é a lei.",
+      "narracao": "A segunda parte da lei diz que o amor é a lei, amor sob vontade. Sem amor, a vontade não flui.",
+      "transicao": "corte",
+      "fundo": "interlocking glowing geometric circles, sacred geometry, soft light",
+      "imagem": "fundo-6.jpg"
+    },
+    {
+      "tipo": "lista",
+      "titulo": "Práticas principais",
+      "itens": [
+        "Meditação e Yoga",
+        "Rituais de Magia",
+        "Estudo da Cabala",
+        "Autoconhecimento"
+      ],
+      "narracao": "Para alcançar esse estado, os praticantes utilizam yoga, magia cerimonial e o estudo constante.",
+      "transicao": "deslizar"
+    },
+    {
+      "tipo": "texto",
+      "texto": "O homem mais ímpio do mundo.",
+      "narracao": "Crowley foi perseguido e chamado de homem mais perverso do mundo pela imprensa da época.",
+      "transicao": "zoom"
+    },
+    {
+      "tipo": "texto",
+      "texto": "Legado contínuo.",
+      "narracao": "Mesmo após sua morte, suas ideias continuaram a crescer e a influenciar o mundo ocidental.",
+      "transicao": "subir"
+    },
+    {
+      "tipo": "lista",
+      "titulo": "Influência na cultura",
+      "itens": [
+        "Raul Seixas",
+        "David Bowie",
+        "The Beatles",
+        "Fernando Pessoa"
+      ],
+      "narracao": "Artistas como Raul Seixas e grandes nomes do rock foram profundamente influenciados por essa filosofia.",
+      "transicao": "corte"
+    },
+    {
+      "tipo": "texto",
+      "texto": "O Aeon de Hórus.",
+      "narracao": "A Thelema anuncia uma nova era para a humanidade, focada na liberdade individual e espiritual.",
+      "transicao": "deslizar"
+    },
+    {
+      "tipo": "texto",
+      "texto": "Busque seu próprio caminho.",
+      "narracao": "No final, a mensagem é que cada pessoa deve ser o mestre do seu próprio destino.",
+      "transicao": "zoom"
+    },
+    {
+      "tipo": "texto",
+      "texto": "Você conhecia essa história?",
+      "narracao": "Thelema é um sistema complexo que mistura misticismo oriental e ocidental.",
+      "transicao": "subir"
+    },
+    {
+      "tipo": "texto",
+      "texto": "Texto escrito com IA, sem fonte conferida.",
+      "narracao": "Este texto foi escrito com inteligência artificial e as fontes não foram conferidas.",
+      "transicao": "corte"
+    }
+  ]
+}
