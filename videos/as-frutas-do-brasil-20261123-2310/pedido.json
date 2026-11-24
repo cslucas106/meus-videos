@@ -1,0 +1,163 @@
+{
+  "versao": 1,
+  "titulo": "As frutas do Brasil",
+  "formato": "vertical",
+  "voz": "pt-BR-AntonioNeural",
+  "velocidade": "+0%",
+  "musica": "calma",
+  "legenda": true,
+  "livre": true,
+  "tema": "pop",
+  "efeitos": true,
+  "post": {
+    "texto": "Descubra curiosidades incríveis sobre frutas tropicais marcantes do Brasil, como a fruta-pão, a graviola e o caju.",
+    "hashtags": [
+      "#frutas",
+      "#brasil",
+      "#curiosidades",
+      "#natureza",
+      "#alimentacao"
+    ]
+  },
+  "dados": [
+    {
+      "id": "ano1558",
+      "rotulo": "1558",
+      "valor": 1558,
+      "unidade": "ano",
+      "fonte": "Wikipédia · Caju",
+      "url": "https://pt.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&redirects=1&format=json&formatversion=2&titles=Caju",
+      "data": "consultado em 11/2026"
+    },
+    {
+      "id": "ano2021",
+      "rotulo": "2021",
+      "valor": 2021,
+      "unidade": "ano",
+      "fonte": "Wikipédia · Graviola",
+      "url": "https://pt.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&redirects=1&format=json&formatversion=2&titles=Graviola",
+      "data": "consultado em 11/2026"
+    }
+  ],
+  "cenas": [
+    {
+      "tipo": "titulo",
+      "titulo": "Você conhece?",
+      "subtitulo": "Curiosidades",
+      "transicao": "corte",
+      "fotoBusca": "tropical fruits basket Brazil",
+      "narracao": "Veja detalhes curiosos sobre frutas tropicais muito queridas no país."
+    },
+    {
+      "tipo": "lista",
+      "titulo": "Top 3 frutas tropicais",
+      "itens": [
+        "Fruta-pão",
+        "Graviola",
+        "Caju"
+      ],
+      "transicao": "zoom",
+      "fotoBusca": "fruir caju",
+      "narracao": "Separamos três frutas marcantes que fazem sucesso em várias regiões."
+    },
+    {
+      "tipo": "texto",
+      "texto": "A fruta-pão veio de longe e hoje faz parte de várias culinárias.",
+      "transicao": "deslizar",
+      "fotoBusca": "breadfruit tree",
+      "narracao": "A fruta-pão veio de longe e hoje faz parte de várias culinárias.",
+      "foto": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Starr_031209-0044_Artocarpus_altilis.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+        "pagina": "https://commons.wikimedia.org/wiki/File:Starr_031209-0044_Artocarpus_altilis.jpg",
+        "autor": "Forest & Kim Starr",
+        "licenca": "CC BY 3.0",
+        "titulo": "Starr 031209-0044 Artocarpus altilis",
+        "largura": 1224,
+        "altura": 1632
+      }
+    },
+    {
+      "tipo": "linhaTempo",
+      "titulo": "Trajetória do caju",
+      "eventos": [
+        {
+          "dado": "ano1558",
+          "texto": "Primeira descrição escrita do caju"
+        },
+        {
+          "dado": "ano2021",
+          "texto": "Sequenciamento do genoma da graviola"
+        }
+      ],
+      "transicao": "corte",
+      "narracao": "A história dessas plantas envolve registros antigos e pesquisas recentes."
+    },
+    {
+      "tipo": "texto",
+      "texto": "O caju é um pseudofruto muito rico em vitamina C.",
+      "transicao": "zoom",
+      "fotoBusca": "cashew apple and nut",
+      "narracao": "O caju é um pseudofruto muito rico em vitamina C.",
+      "foto": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/f/fd/Cashew_fruit_apple.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+        "pagina": "https://commons.wikimedia.org/wiki/File:Cashew_fruit_apple.jpg",
+        "autor": "வெங்கட்ராமன். தி",
+        "licenca": "CC BY-SA 4.0",
+        "titulo": "Cashew fruit apple",
+        "largura": 864,
+        "altura": 1152
+      }
+    },
+    {
+      "tipo": "lista",
+      "titulo": "Usos do caju",
+      "itens": [
+        "Suco refrescante",
+        "Castanha torrada",
+        "Cajuína tradicional"
+      ],
+      "transicao": "deslizar",
+      "fotoBusca": "cashew nuts roasted",
+      "narracao": "Ele é aproveitado de muitas formas, do suco à castanha.",
+      "foto": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/1/1f/Cashew_Nut_or_Kasoy.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+        "pagina": "https://commons.wikimedia.org/wiki/File:Cashew_Nut_or_Kasoy.jpg",
+        "autor": "Bim24",
+        "licenca": "CC BY 4.0",
+        "titulo": "Cashew Nut or Kasoy",
+        "largura": 1280,
+        "altura": 960
+      }
+    },
+    {
+      "tipo": "texto",
+      "texto": "A graviola tem uma textura cremosa que lembra a banana.",
+      "transicao": "corte",
+      "fotoBusca": "soursop fruit",
+      "narracao": "Já a graviola tem uma textura cremosa que lembra a banana."
+    },
+    {
+      "tipo": "texto",
+      "texto": "O aroma da graviola lembra o abacaxi.",
+      "transicao": "zoom",
+      "narracao": "O seu aroma marcante também remete ao abacaxi."
+    },
+    {
+      "tipo": "lista",
+      "titulo": "Variedade brasileira",
+      "itens": [
+        "Sabor único",
+        "Uso em sobremesas",
+        "Riqueza tropical"
+      ],
+      "transicao": "deslizar",
+      "narracao": "Todas essas espécies mostram a grande riqueza da nossa flora."
+    },
+    {
+      "tipo": "texto",
+      "texto": "Texto escrito com IA, sem fonte conferida.",
+      "transicao": "subir",
+      "narracao": "Texto escrito com IA, sem fonte conferida."
+    }
+  ]
+}
