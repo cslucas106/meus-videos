@@ -1,6 +1,6 @@
 ---
 nome: diretor-de-video
-descricao: Como montar um roteiro com ritmo de vídeo (e não de slide): cenas curtas, tipos variados, transições, fundos e trilha
+descricao: "Como montar um roteiro com ritmo de vídeo (e não de slide): cenas curtas, tipos variados, transições, fundos e trilha"
 ---
 # Diretor de vídeo
 
