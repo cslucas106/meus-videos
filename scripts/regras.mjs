@@ -4,7 +4,7 @@
 // de mandar o pedido; aqui elas rodam de novo, por garantia.
 
 export const FORMATOS = { vertical: [1080, 1920], horizontal: [1920, 1080] };
-export const TIPOS = ['titulo', 'numero', 'barras', 'linha', 'texto', 'ranking', 'comparacao', 'mapa', 'icones', 'linhaTempo', 'lista'];
+export const TIPOS = ['titulo', 'numero', 'barras', 'linha', 'texto', 'ranking', 'comparacao', 'mapa', 'icones', 'linhaTempo', 'lista', 'animacao'];
 export const TRANSICOES = ['deslizar', 'zoom', 'subir', 'corte'];
 export const MUSICAS = ['calma', 'animada', 'nenhuma'];
 export const UFS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ');
@@ -53,6 +53,170 @@ export function fotoValida(f) {
 }
 
 /** Dado que é um ano (unidade "ano"): aparece sem ponto (1904) e só na linha do tempo, nunca como valor de gráfico. */
+// ---------- Cena "animacao": código que a IA escreve para uma animação que as cenas prontas não fazem ----------
+// O código roda no Chrome que desenha o vídeo (e antes, num teste isolado no Node). Por isso só um pedaço pequeno e seguro do
+// JavaScript passa: sem laços (use faixa(n).map), sem acessar nada por colchetes (use pega(lista, i)), sem this, new, function,
+// classes, import nem eval, e sem os nomes que dariam acesso à página, à internet ou ao computador (NEGADOS). Além disso, ele roda
+// com esses nomes trocados por undefined e o texto que aparece na tela é conferido com a tabela, como a narração.
+export const MAX_ANIMACOES = 2;
+export const MAX_CODIGO = 4000;
+const PALAVRAS_PROIBIDAS = new Set(
+  'for while do class new this import export async await function with yield delete debugger var try catch finally throw super extends eval'.split(' ')
+);
+export const NEGADOS = (
+  'window self top parent frames opener globalThis global document location history navigator fetch XMLHttpRequest WebSocket ' +
+  'EventSource Request Response Headers Image Audio Option Worker SharedWorker ServiceWorker importScripts Function setTimeout ' +
+  'setInterval setImmediate requestAnimationFrame requestIdleCallback queueMicrotask localStorage sessionStorage indexedDB caches ' +
+  'alert confirm prompt open close postMessage Object Reflect Proxy Symbol WeakRef FinalizationRegistry Array Promise process require ' +
+  'module exports Buffer __dirname __filename Deno Bun chrome customElements Atomics SharedArrayBuffer WebAssembly performance console'
+).split(' ');
+const NEGADOS_SET = new Set(NEGADOS);
+// nomes de propriedade que abririam caminho para fora (construtor de funções, protótipos, a página) ou que travam (textos gigantes)
+const PROPS_PROIBIDAS = new Set(
+  (
+    'constructor prototype __proto__ caller callee call apply bind ownerDocument defaultView getRootNode parentNode parentElement ' +
+    'contentWindow contentDocument innerHTML outerHTML insertAdjacentHTML dangerouslySetInnerHTML repeat padStart padEnd'
+  ).split(' ')
+);
+// palavras depois das quais "[" abre uma lista (e não acessa algo por colchetes)
+const ANTES_DE_LISTA = new Set(['return', 'typeof', 'void', 'case', 'else', 'in', 'of', 'const', 'let', 'instanceof']);
+
+/** Separa o código em pedaços (nome, número, texto, sinal). Lança erro em texto ou comentário sem fim. */
+export function tokensDoCodigo(src) {
+  const t = [];
+  const n = src.length;
+  const lerTexto = (i, q) => {
+    let v = '';
+    for (i++; i < n; i++) {
+      const c = src[i];
+      if (c === q) return [v, i + 1];
+      if (c === '\n') throw new Error('texto entre aspas sem fechar');
+      if (c === '\\') {
+        const e = src[i + 1];
+        if (e === 'u' || e === 'x' || /[0-9]/.test(e)) throw new Error('não use códigos \\u, \\x nem números escapados dentro de textos');
+        v += { n: '\n', t: '\t' }[e] || e;
+        i++;
+        continue;
+      }
+      v += c;
+    }
+    throw new Error('texto entre aspas sem fechar');
+  };
+  // lê a partir de i até o fim (ou até a "}" que fecha um ${…} de texto com crase); devolve onde parou
+  const lex = (i, dentroDeCrase) => {
+    let chaves = 0;
+    while (i < n) {
+      const c = src[i];
+      if (/\s/.test(c)) { i++; continue; }
+      if (c === '/' && src[i + 1] === '/') { const j = src.indexOf('\n', i); i = j < 0 ? n : j; continue; }
+      if (c === '/' && src[i + 1] === '*') {
+        const j = src.indexOf('*/', i + 2);
+        if (j < 0) throw new Error('comentário sem fechar');
+        i = j + 2;
+        continue;
+      }
+      if (c === '"' || c === "'") { const [v, j] = lerTexto(i, c); t.push({ t: 'str', v }); i = j; continue; }
+      if (c === '`') {
+        let v = '';
+        i++;
+        for (;;) {
+          if (i >= n) throw new Error('texto com crase sem fechar');
+          const d = src[i];
+          if (d === '`') { t.push({ t: 'str', v }); i++; break; }
+          if (d === '\\') {
+            const e = src[i + 1];
+            if (e === 'u' || e === 'x' || /[0-9]/.test(e)) throw new Error('não use códigos \\u, \\x nem números escapados dentro de textos');
+            v += e;
+            i += 2;
+            continue;
+          }
+          if (d === '$' && src[i + 1] === '{') {
+            t.push({ t: 'str', v });
+            v = '';
+            t.push({ t: 'p', v: '(' });
+            i = lex(i + 2, true);
+            t.push({ t: 'p', v: ')' });
+            continue;
+          }
+          v += d;
+          i++;
+        }
+        continue;
+      }
+      if (/[A-Za-z_$\u00c0-\uffff]/.test(c)) {
+        let j = i + 1;
+        while (j < n && /[\w$\u00c0-\uffff]/.test(src[j])) j++;
+        t.push({ t: 'id', v: src.slice(i, j) });
+        i = j;
+        continue;
+      }
+      if (/[0-9]/.test(c) || (c === '.' && /[0-9]/.test(src[i + 1] || ''))) {
+        let j = i + 1;
+        while (j < n && /[\w.]/.test(src[j])) j++;
+        t.push({ t: 'num', v: src.slice(i, j) });
+        i = j;
+        continue;
+      }
+      if (c === '\\') throw new Error('não use barra invertida (\\) fora dos textos');
+      if (c === '?' && src[i + 1] === '.' && !/[0-9]/.test(src[i + 2] || '')) { t.push({ t: 'p', v: '?.' }); i += 2; continue; }
+      if (c === '=' && src[i + 1] === '>') { t.push({ t: 'p', v: '=>' }); i += 2; continue; }
+      if (c === '{') chaves++;
+      if (c === '}') {
+        if (dentroDeCrase && chaves === 0) return i + 1;
+        chaves--;
+      }
+      t.push({ t: 'p', v: c });
+      i++;
+    }
+    if (dentroDeCrase) throw new Error('${ sem fechar num texto com crase');
+    return i;
+  };
+  lex(0, false);
+  return t;
+}
+
+/** Confere o código de uma cena "animacao". Devolve a lista de problemas (vazia = pode rodar). */
+export function checaCodigo(codigo) {
+  if (typeof codigo !== 'string' || !codigo.trim()) return ['falta o código da animação'];
+  if (codigo.length > MAX_CODIGO) return [`código longo demais (máx. ${MAX_CODIGO} letras)`];
+  let t;
+  try {
+    t = tokensDoCodigo(codigo);
+  } catch (err) {
+    return [err.message];
+  }
+  const probs = new Set();
+  const pilha = [];
+  for (const [k, x] of t.entries()) {
+    const ant = t[k - 1];
+    if (x.t === 'id') {
+      const depoisDoPonto = ant && ant.t === 'p' && (ant.v === '.' || ant.v === '?.');
+      if (!depoisDoPonto && PALAVRAS_PROIBIDAS.has(x.v))
+        probs.add(`não use "${x.v}" (sem laços: use faixa(n).map; sem function: use =>; sem this, new, class, import, eval, try)`);
+      if (!depoisDoPonto && NEGADOS_SET.has(x.v)) probs.add(`não use "${x.v}": a animação só usa o que o app entrega`);
+      if (PROPS_PROIBIDAS.has(x.v) || x.v.startsWith('__') || (depoisDoPonto && x.v.startsWith('_')))
+        probs.add(`não use "${x.v}"`);
+    } else if (x.t === 'str') {
+      const v = x.v.trim();
+      if (PROPS_PROIBIDAS.has(v) || v.startsWith('__')) probs.add(`não use "${v}"`);
+    } else if (x.v === '(' || x.v === '[' || x.v === '{') {
+      if (x.v === '[' && ant) {
+        const acesso =
+          ant.t === 'num' ||
+          ant.t === 'str' ||
+          (ant.t === 'id' && !ANTES_DE_LISTA.has(ant.v)) ||
+          (ant.t === 'p' && (ant.v === ')' || ant.v === ']' || ant.v === '?.'));
+        const chaveCalculada = ant.t === 'p' && (ant.v === '{' || ant.v === ',') && pilha[pilha.length - 1] === '{';
+        if (acesso) probs.add('não acesse nada com colchetes (lista[i], objeto["x"]): use pega(lista, i) e objeto.nome');
+        if (chaveCalculada) probs.add('não use chave calculada ({[x]: …}) em objetos');
+      }
+      pilha.push(x.v);
+    } else if (x.v === ')' || x.v === ']' || x.v === '}') pilha.pop();
+  }
+  if (!t.some(x => x.t === 'id' && x.v === 'return')) probs.add('o código precisa terminar com return h(…) (o desenho da cena)');
+  return [...probs];
+}
+
 export const ehAno = d => !!d && /^anos?$/i.test(String(d.unidade || '').trim());
 const naWikipedia = u => /^https:\/\/[a-z]{2,3}\.wikipedia\.org\//.test(String(u || ''));
 
@@ -242,6 +406,8 @@ export function validaPedido(p) {
   if (p.livre != null && typeof p.livre !== 'boolean') e('livre deve ser true ou false');
   if (p.tema != null && !TEMAS.includes(p.tema)) e(`tema deve ser ${TEMAS.join(', ')}`);
   if (p.efeitos != null && typeof p.efeitos !== 'boolean') e('efeitos deve ser true ou false');
+  if (Array.isArray(p.cenas) && p.cenas.filter(c => c && c.tipo === 'animacao').length > MAX_ANIMACOES)
+    e(`no máximo ${MAX_ANIMACOES} cenas de animação por vídeo`);
   if (Array.isArray(p.cenas) && p.cenas.filter(c => c && c.foto != null).length > MAX_FOTOS)
     e(`no máximo ${MAX_FOTOS} fotos`);
   if (p.post != null) {
@@ -297,7 +463,7 @@ export function validaPedido(p) {
     if (!c.narracao || typeof c.narracao !== 'string') e(`${onde}: falta a narração`);
     else if (c.narracao.length > MAX_NARRACAO) e(`${onde}: narração longa demais (máx. ${MAX_NARRACAO} letras)`);
     const lista = LISTAS[c.tipo];
-    const usa = ['numero', 'icones'].includes(c.tipo) ? [c.dado] : lista ? c.dados : [];
+    const usa = ['numero', 'icones'].includes(c.tipo) ? [c.dado] : lista || c.tipo === 'animacao' ? c.dados : [];
     if (['numero', 'icones'].includes(c.tipo) && !c.dado) e(`${onde}: diga qual dado mostrar`);
     if (lista && (!Array.isArray(c.dados) || c.dados.length < lista[0] || c.dados.length > lista[1]))
       e(
@@ -358,6 +524,11 @@ export function validaPedido(p) {
           if (porId[id] && !UFS.includes(String(porId[id].uf || '').toUpperCase()))
             e(`${onde}: o dado "${id}" precisa do campo uf (sigla do estado, ex. CE) ou mun (código IBGE do município) para ir no mapa`);
       }
+    }
+    if (c.tipo === 'animacao') {
+      if (!c.titulo || typeof c.titulo !== 'string') e(`${onde}: a animação precisa de um titulo (é o que aparece se ela não funcionar)`);
+      for (const m of checaCodigo(c.codigo)) e(`${onde} (animação): ${m}`);
+      if (c.dados != null && (!Array.isArray(c.dados) || c.dados.length > 8)) e(`${onde}: a animação usa até 8 dados (ids da tabela)`);
     }
     if (c.tipo === 'icones' && porId[c.dado]) {
       const d = porId[c.dado];

@@ -16,6 +16,7 @@ import { AbsoluteFill, Sequence, useCurrentFrame, useVideoConfig } from 'remotio
 import { COR, aplicaTema } from './estilo.js';
 import { Cena } from './Cena.jsx';
 import {
+  Animacao,
   Barras,
   Comparacao,
   Fontes,
@@ -41,7 +42,8 @@ const CENAS = {
   mapa: Mapa,
   icones: Icones,
   linhaTempo: LinhaTempo,
-  lista: Lista
+  lista: Lista,
+  animacao: Animacao
 };
 
 const Progresso = () => {

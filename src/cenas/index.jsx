@@ -1,7 +1,9 @@
 // As cenas do vídeo. Cada uma recebe a cena do roteiro e a tabela de dados (por id).
 // As animações dos números começam quando a voz chega ao número (momentoNumero), para imagem e fala andarem juntas.
+import React from 'react';
 import brasil from '@svg-maps/brazil';
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
+import { compila, montaApi } from '../animacao.js';
 import { COR, comUnidade, curto, ehAno, formata, urlBonita } from '../estilo.js';
 import { ufDoMunicipio } from '../../scripts/regras.mjs';
 import { Cabeca, momentoNumero, Palco, Rodape, Sobe, useEntrada, useU, useVertical } from '../base.jsx';
@@ -572,6 +574,63 @@ export const Fontes = ({ dados, titulo, temMapa, temMalha, musica, livre, fotos 
           {musica && musica !== 'nenhuma' ? ' Trilha gerada pelo próprio modelo.' : ''}
         </div>
       </Sobe>
+    </Palco>
+  );
+};
+
+/* Cena "animacao": desenho feito pelo código da IA (src/animacao.js). Se o código der erro em qualquer quadro, a cena mostra só o
+   título, como a cena texto (o vídeo nunca para por causa dela). */
+const compiladas = new Map();
+class Guarda extends React.Component {
+  constructor(p) {
+    super(p);
+    this.state = { erro: false };
+  }
+  static getDerivedStateFromError() {
+    return { erro: true };
+  }
+  render() {
+    return this.state.erro ? this.props.reserva : this.props.children;
+  }
+}
+export const Animacao = ({ cena, dados }) => {
+  const u = useU();
+  const vertical = useVertical();
+  const frame = useCurrentFrame();
+  const { fps, width, height } = useVideoConfig();
+  const reserva = <Texto cena={{ texto: cena.titulo }} />;
+  const L = width - 180 * u,
+    A = vertical ? height - 900 * u : height - 520 * u;
+  let el = null;
+  try {
+    if (!compiladas.has(cena.codigo)) compiladas.set(cena.codigo, compila(cena.codigo));
+    const { api, ehPeca } = montaApi({
+      f: frame,
+      fps,
+      dur: cena.frames || 4 * fps,
+      L,
+      A,
+      u,
+      vertical,
+      cor: { ...COR, barras: [...COR.barras] },
+      tabela: Object.values(dados),
+      ids: cena.dados || [],
+      criar: React.createElement,
+      spring
+    });
+    const r = compiladas.get(cena.codigo)(api);
+    if (ehPeca(r)) el = r;
+  } catch (e) {
+    console.error('Animação da IA com erro:', e && e.message);
+  }
+  if (!el) return reserva;
+  return (
+    <Palco>
+      <Cabeca texto={cena.titulo} />
+      <div style={{ width: L, height: A, position: 'relative', overflow: 'hidden', flex: 'none' }}>
+        <Guarda reserva={null}>{el}</Guarda>
+      </div>
+      <Rodape lista={lista(cena, dados)} />
     </Palco>
   );
 };

@@ -4,6 +4,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { validaPedido } from './regras.mjs';
+import { confereAnimacoes } from './animacao-teste.mjs';
 
 const arq = process.argv[2];
 if (!arq) {
@@ -23,6 +24,8 @@ if (erros.length) {
   console.error(`\n${erros.length} problema(s). O vídeo não foi gerado.`);
   process.exit(1);
 }
+// cenas "animacao": roda o código num teste isolado; a que falhar vira texto (o vídeo sai do mesmo jeito)
+for (const m of confereAnimacoes(pedido, dados)) console.log(`::warning::${m}`);
 const saida = process.argv[3];
 if (saida) {
   mkdirSync(dirname(saida), { recursive: true });

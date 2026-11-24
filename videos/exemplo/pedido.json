@@ -119,6 +119,16 @@
       "transicao": "zoom"
     },
     {
+      "tipo": "animacao",
+      "titulo": "Se o Ceará fosse um copo",
+      "dados": [
+        "parte"
+      ],
+      "codigo": "const k = mola(8);\nconst nivel = 760 * k * valor('parte') / 100;\nconst bolhas = faixa(8).map(i => h('circle', {\n  cx: 340 + i * 45,\n  cy: 900 - ((f * 3 + i * 70) % Math.max(1, nivel)),\n  r: 8 + (i % 3) * 4,\n  fill: cor.texto,\n  opacity: 0.35\n}));\nreturn h('svg', { viewBox: '0 0 1000 1000', width: L, height: A },\n  h('path', { d: 'M300 120 L330 900 Q500 960 670 900 L700 120', fill: 'none', stroke: cor.borda, strokeWidth: 14, strokeLinejoin: 'round' }),\n  h('rect', { x: 318, y: 900 - nivel, width: 364, height: nivel, fill: cor.destaque, opacity: 0.9, rx: 16 }),\n  ...bolhas,\n  h('text', { x: 500, y: 870 - nivel, fill: cor.texto, fontSize: 90, fontWeight: 800, textAnchor: 'middle' }, conta('parte', entre(0, 1, 0.05, 0.6)))\n);",
+      "narracao": "Se o Ceará fosse um copo, a capital encheria mais de um quarto dele.",
+      "transicao": "subir"
+    },
+    {
       "tipo": "linhaTempo",
       "titulo": "Do povoado à metrópole",
       "eventos": [

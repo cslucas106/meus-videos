@@ -17,6 +17,8 @@ export function quadros(props) {
   const l = (props.cenas || []).map((c, i) => {
     const dur = c.frames || 4 * fps;
     const q = { n: i + 1, tipo: c.tipo, arquivo: `cena-${String(i + 1).padStart(2, '0')}.jpg`, quadro: ini + Math.min(dur - 1, Math.floor(dur * 0.78)), inicio: +(ini / fps).toFixed(2), fim: +((ini + dur) / fps).toFixed(2) };
+    // animação da IA que falhou no teste (virou texto): o app mostra o motivo
+    if (c.animacaoErro) q.aviso = String(c.animacaoErro).replace(/--+>|[<>]/g, '').slice(0, 300);
     ini += dur;
     return q;
   });
@@ -29,7 +31,7 @@ export function quadros(props) {
 export const notas = (props, l) =>
   `Storyboard de **${String(props.titulo || '').replace(/[<>]/g, '')}**: uma foto de cada cena e a narração (\`narracao.mp3\`). ` +
   'Confira e, se estiver bom, aprove no PocketCode AI para gerar o vídeo.\n\n' +
-  `<!-- storyboard:${JSON.stringify(l.map(({ n, tipo, arquivo, inicio, fim }) => ({ n, tipo, arquivo, inicio, fim })))} -->\n`;
+  `<!-- storyboard:${JSON.stringify(l.map(({ n, tipo, arquivo, inicio, fim, aviso }) => ({ n, tipo, arquivo, inicio, fim, ...(aviso ? { aviso } : {}) })))} -->\n`;
 
 async function principal(entrada, pasta) {
   const { bundle } = await import('@remotion/bundler');
