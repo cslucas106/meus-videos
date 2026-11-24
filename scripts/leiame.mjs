@@ -69,8 +69,8 @@ export function montaLeiame(pedido, versoes) {
     }
     const fotos = [...new Map((pedido.cenas || []).filter(c => c && c.foto).map(c => [c.foto.pagina, c.foto])).values()];
     if (fotos.length) {
-      l.push('## Fotos (Wikimedia Commons)', '');
-      for (const f of fotos) l.push(`- [${f.autor}](${f.pagina}) · ${f.licenca}`);
+      l.push('## Fotos', '');
+      for (const f of fotos) l.push(`- [${f.autor}](${f.pagina}) · ${f.licenca} · ${f.fonte || 'Wikimedia Commons'}`);
       l.push('');
     }
   }

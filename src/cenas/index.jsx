@@ -565,8 +565,10 @@ export const Fontes = ({ dados, titulo, temMapa, temMalha, musica, livre, fotos 
       {fotos.length ? (
         <Sobe atraso={24}>
           <div style={{ fontSize: 26 * u, color: COR.suave, lineHeight: 1.35 }}>
-            <b style={{ color: COR.texto }}>Fotos (Wikimedia Commons):</b>{' '}
-            {[...new Map(fotos.map(f => [f.pagina, f])).values()].map(f => `${f.autor} (${f.licenca})`).join(' · ')}
+            <b style={{ color: COR.texto }}>Fotos:</b>{' '}
+            {[...new Map(fotos.map(f => [f.pagina, f])).values()]
+              .map(f => `${f.autor} (${f.licenca}, ${f.fonte || 'Wikimedia Commons'})`)
+              .join(' · ')}
           </div>
         </Sobe>
       ) : null}

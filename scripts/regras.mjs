@@ -40,18 +40,19 @@ export const MAX_ITEM = 120; // letras de cada evento/item
 export const MAX_POST = 700; // letras do texto do post (kit para postar)
 export const TEMAS = ['escuro', 'neon', 'jornal', 'natureza', 'pop'];
 export const MAX_FOTOS = 6;
-/** Foto do Wikimedia Commons (o workflow baixa e põe o crédito na cena e no fim do vídeo) */
+/** Foto do Wikimedia Commons, do Pixabay ou da NASA (o app baixa; o crédito vai na cena e no fim do vídeo) */
 export function fotoValida(f) {
   return (
     !!f &&
     typeof f === 'object' &&
-    /^https:\/\/upload\.wikimedia\.org\/[^\s"'<>]+$/.test(String(f.url || '')) &&
-    /^https:\/\/commons\.wikimedia\.org\/[^\s"'<>]+$/.test(String(f.pagina || '')) &&
+    /^https:\/\/(upload\.wikimedia\.org|pixabay\.com|cdn\.pixabay\.com|images-assets\.nasa\.gov)\/[^\s"'<>]+$/.test(String(f.url || '')) &&
+    /^https:\/\/(commons\.wikimedia\.org|pixabay\.com|images\.nasa\.gov)\/[^\s"'<>]+$/.test(String(f.pagina || '')) &&
     typeof f.autor === 'string' &&
     !!f.autor.trim() &&
     f.autor.length <= 200 &&
     typeof f.licenca === 'string' &&
-    /^(cc0|cc[ -]by|public domain|pd\b|domínio público)/i.test(f.licenca.trim()) &&
+    /^(cc0|cc[ -]by|public domain|pd\b|domínio público|licença pixabay)/i.test(f.licenca.trim()) &&
+    (f.fonte == null || (typeof f.fonte === 'string' && f.fonte.length <= 40)) &&
     f.licenca.length <= 60
   );
 }
@@ -488,7 +489,7 @@ export function validaPedido(p) {
       e(`${onde}: a descrição da imagem de fundo deve ter até 300 letras`);
     const porId = Object.fromEntries(prontos.map(d => [d.id, d]));
     if (c.foto != null && !fotoValida(c.foto))
-      e(`${onde}: foto inválida (precisa do Wikimedia Commons, com autor, licença livre e página)`);
+      e(`${onde}: foto inválida (precisa ser do Wikimedia Commons, do Pixabay ou da NASA, com autor, licença livre e página)`);
     if (c.tipo === 'linhaTempo') {
       const ev = Array.isArray(c.eventos) ? c.eventos : [];
       if (ev.length < 2 || ev.length > MAX_ITENS) e(`${onde}: linhaTempo precisa de 2 a ${MAX_ITENS} eventos`);

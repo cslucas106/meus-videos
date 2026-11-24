@@ -186,7 +186,7 @@ def texto_do_post(pedido, fontes):
         partes.append("Fontes: " + "; ".join(sorted({fonte for (fonte, _url) in fontes})))
     fotos = fotos_do_pedido(pedido)
     if fotos:
-        partes.append("Fotos: " + "; ".join(f"{ft['autor']} ({ft['licenca']})" for ft in fotos) + ", via Wikimedia Commons")
+        partes.append("Fotos: " + "; ".join(f"{ft['autor']} ({ft['licenca']}, {ft.get('fonte') or 'Wikimedia Commons'})" for ft in fotos))
     tags = [t for t in (post.get("hashtags") or []) if isinstance(t, str) and t.startswith("#")]
     if tags:
         partes.append(" ".join(tags))
@@ -274,9 +274,9 @@ async def principal(entrada, pasta):
             f.write("- nenhuma (sem dados conferidos)\n")
         fotos = fotos_do_pedido(pedido)
         if fotos:
-            f.write("\n### Fotos (Wikimedia Commons)\n\n")
+            f.write("\n### Fotos\n\n")
             for ft in fotos:
-                f.write(f"- [{ft['autor']}]({ft['pagina']}) · {ft['licenca']}\n")
+                f.write(f"- [{ft['autor']}]({ft['pagina']}) · {ft['licenca']} · {ft.get('fonte') or 'Wikimedia Commons'}\n")
         f.write("\nArquivos: `video.mp4` (com narração), `video-sem-audio.mp4`, `narracao.mp3`, `legendas.srt`")
         f.write(", `capa.jpg` e `post.txt` (texto pronto para postar).\n" if pedido.get("post") else " e `capa.jpg`.\n")
     # kit para postar: só quando o pedido tem post (a pessoa pode desligar o post e as hashtags no app)

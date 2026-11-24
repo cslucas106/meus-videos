@@ -202,3 +202,15 @@ test('opções novas: estilos de legenda e efeitos, volume da trilha, trilhas no
   mal({ musicaVolume: '50' }, /musicaVolume/);
   mal({ mostrarFontes: 'não' }, /mostrarFontes/);
 });
+
+test('fotos: Wikimedia Commons, Pixabay e NASA valem (com autor, licença e página); outros endereços não', async () => {
+  const { fotoValida } = await import('../scripts/regras.mjs');
+  const ok = f => assert.ok(fotoValida(f), JSON.stringify(f));
+  const mal = f => assert.ok(!fotoValida(f), JSON.stringify(f));
+  ok({ url: 'https://upload.wikimedia.org/a.jpg', pagina: 'https://commons.wikimedia.org/wiki/File:a.jpg', autor: 'X', licenca: 'CC BY 4.0' });
+  ok({ url: 'https://pixabay.com/get/g1.jpg', pagina: 'https://pixabay.com/photos/caju-1/', autor: 'Maria', licenca: 'Licença Pixabay', fonte: 'Pixabay' });
+  ok({ url: 'https://images-assets.nasa.gov/image/A3/A3~large.jpg', pagina: 'https://images.nasa.gov/details/A3', autor: 'NASA / JPL', licenca: 'Domínio público (NASA)', fonte: 'NASA' });
+  mal({ url: 'https://evil.com/a.jpg', pagina: 'https://pixabay.com/x', autor: 'X', licenca: 'Licença Pixabay' });
+  mal({ url: 'https://pixabay.com/get/a.jpg', pagina: 'https://pixabay.com/x', autor: 'X', licenca: 'Todos os direitos reservados' });
+  mal({ url: 'https://pixabay.com/get/a.jpg', pagina: 'https://pixabay.com/x', autor: 'X', licenca: 'Licença Pixabay', fonte: 'x'.repeat(41) });
+});

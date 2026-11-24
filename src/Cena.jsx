@@ -6,7 +6,7 @@ import { Legenda } from './Legenda.jsx';
 
 export const TRANSICOES = ['deslizar', 'zoom', 'subir', 'corte'];
 
-/** Crédito da foto do Wikimedia Commons, pequeno, no pé da tela (abaixo da legenda) */
+/** Crédito da foto (Wikimedia Commons, Pixabay ou NASA: foto.fonte), pequeno, no pé da tela (abaixo da legenda) */
 const Credito = ({ foto }) => {
   const { width, height } = useVideoConfig();
   const u = Math.min(width, height) / 1080;
@@ -26,7 +26,7 @@ const Credito = ({ foto }) => {
         textOverflow: 'ellipsis'
       }}
     >
-      Foto: {foto.autor} · {foto.licenca} · Wikimedia Commons
+      Foto: {foto.autor} · {foto.licenca} · {foto.fonte || 'Wikimedia Commons'}
     </div>
   );
 };
