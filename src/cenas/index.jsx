@@ -511,7 +511,7 @@ export const Texto = ({ cena }) => {
 
 /* Tela final: as fontes (mostrarFontes) e, no roteiro livre, o aviso de texto escrito com IA (avisoIA). O narrar.py só cria a tela
    quando uma das duas vale; sem nenhuma, o vídeo termina na última cena. */
-export const Fontes = ({ dados, titulo, temMapa, temMalha, musica, livre, fotos = [], mostrarFontes = true, avisoIA = true }) => {
+export const Fontes = ({ dados, titulo, temMapa, temMalha, musica, livre, fotos = [], sons = [], mostrarFontes = true, avisoIA = true }) => {
   const u = useU();
   const fontes = new Map();
   for (const d of dados) {
@@ -569,6 +569,14 @@ export const Fontes = ({ dados, titulo, temMapa, temMalha, musica, livre, fotos 
             {[...new Map(fotos.map(f => [f.pagina, f])).values()]
               .map(f => `${f.autor} (${f.licenca}, ${f.fonte || 'Wikimedia Commons'})`)
               .join(' · ')}
+          </div>
+        </Sobe>
+      ) : null}
+      {sons.length ? (
+        <Sobe atraso={27}>
+          <div style={{ fontSize: 26 * u, color: COR.suave, lineHeight: 1.35 }}>
+            <b style={{ color: COR.texto }}>Sons (Freesound):</b>{' '}
+            {[...new Map(sons.map(s => [s.pagina, s])).values()].map(s => `${s.autor} (${s.licenca})`).join(' · ')}
           </div>
         </Sobe>
       ) : null}

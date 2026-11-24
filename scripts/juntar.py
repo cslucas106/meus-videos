@@ -1,4 +1,5 @@
-"""Junta imagem e som: cria a trilha e os efeitos (se o pedido pedir), abaixa a música quando a voz fala e grava o video.mp4.
+"""Junta imagem e som: cria a trilha e os efeitos (se o pedido pedir), abaixa a música quando a voz fala, põe os sons de
+ambiente das cenas (Freesound, out/sons/som-N.mp3) e grava o video.mp4.
 
 Uso: python scripts/juntar.py out
 Lê out/props.json, out/narracao.mp3 e out/video-sem-audio.mp4. Grava out/video.mp4 e, com música, out/trilha.mp3.
@@ -36,7 +37,37 @@ def ganho_trilha(volume):
     return round(0.6 * v / 100, 3)
 
 
-def filtro_mistura(com_musica, com_efeitos, ganho=None):
+GANHO_AMBIENTE = 0.32  # som de ambiente: baixinho, por baixo da voz
+
+
+def sons_das_cenas(props, pasta):
+    """[(arquivo, início em s, duração em s)] dos sons de ambiente (cena.somArquivo) que chegaram em <pasta>/sons/."""
+    fps = props.get("fps") or 30
+    out, inicio = [], 0.0
+    for i, c in enumerate(props.get("cenas") or []):
+        dur = (c.get("frames") or 4 * fps) / fps
+        nome = c.get("somArquivo")
+        if nome:
+            arq = os.path.join(pasta, "sons", os.path.basename(str(nome)))
+            if os.path.exists(arq):
+                out.append((arq, round(inicio, 3), round(dur, 3)))
+            else:
+                print(f"Aviso: o som {nome} da cena {i + 1} não chegou; a cena fica sem som de ambiente.")
+        inicio += dur
+    return out
+
+
+def filtro_ambiente(k, inicio, dur, i):
+    """Um som de ambiente: corta na duração da cena, entra e sai devagar e começa junto com a cena."""
+    saida = max(0.0, dur - 0.8)
+    atraso = int(round(inicio * 1000))
+    return (
+        f"[{k}:a]aresample=44100,aformat=channel_layouts=mono,atrim=0:{dur:.3f},asetpts=PTS-STARTPTS,"
+        f"afade=t=in:d=0.4,afade=t=out:st={saida:.3f}:d=0.8,volume={GANHO_AMBIENTE},adelay={atraso}:all=1[amb{i}]"
+    )
+
+
+def filtro_mistura(com_musica, com_efeitos, ganho=None, ambientes=()):
     """Monta o filtro do ffmpeg. Entradas: 0 = voz, depois a trilha (se houver) e os efeitos (se houver).
     A música fica no volume escolhido e abaixa um pouco quando a voz fala (sidechain); os efeitos ficam por cima, baixinhos; a voz manda."""
     ganho = ganho_trilha(VOLUME_PADRAO) if ganho is None else ganho
@@ -51,6 +82,11 @@ def filtro_mistura(com_musica, com_efeitos, ganho=None):
     if com_efeitos:
         partes.append(f"[{k}:a]aresample=44100,volume=0.30[fx]")
         mistura.append("[fx]")
+        k += 1
+    for i, (_arq, inicio, dur) in enumerate(ambientes):
+        partes.append(filtro_ambiente(k, inicio, dur, i))
+        mistura.append(f"[amb{i}]")
+        k += 1
     partes.append(f"{''.join(mistura)}amix=inputs={len(mistura)}:duration=first:normalize=0,alimiter=limit=0.95[a]")
     return ";".join(partes)
 
@@ -79,21 +115,25 @@ def principal(pasta):
         except subprocess.CalledProcessError as erro:  # efeito é enfeite: sem ele o vídeo sai do mesmo jeito
             print("Aviso: os efeitos sonoros não saíram:", erro.stderr.decode(errors="replace")[-400:])
             com_efeitos = False
-    if estilo == "nenhuma" and not com_efeitos:
+    ambientes = sons_das_cenas(props, pasta)
+    for arq, _inicio, _dur in ambientes:
+        entradas += ["-i", arq]
+    if estilo == "nenhuma" and not com_efeitos and not ambientes:
         roda("ffmpeg", "-y", "-i", imagem, "-i", voz, "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-shortest", saida)
         print("Vídeo pronto (sem música e sem efeitos)")
         return
     n_audio = len(entradas) // 2
     roda(
         "ffmpeg", "-y", *entradas, "-i", imagem,
-        "-filter_complex", filtro_mistura(estilo != "nenhuma", com_efeitos, ganho_trilha(props.get("musicaVolume", VOLUME_PADRAO))),
+        "-filter_complex",
+        filtro_mistura(estilo != "nenhuma", com_efeitos, ganho_trilha(props.get("musicaVolume", VOLUME_PADRAO)), ambientes),
         "-map", f"{n_audio}:v", "-map", "[a]",
         "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-shortest", saida,
     )
     for t in temporarios:
         os.remove(t)
     vol = props.get("musicaVolume", VOLUME_PADRAO)
-    print(f"Vídeo pronto ({'trilha ' + estilo + f' a {vol}%' if estilo != 'nenhuma' else 'sem música'}{', com efeitos' if com_efeitos else ''})")
+    print(f"Vídeo pronto ({'trilha ' + estilo + f' a {vol}%' if estilo != 'nenhuma' else 'sem música'}{', com efeitos' if com_efeitos else ''}{f', {len(ambientes)} som(ns) de ambiente' if ambientes else ''})")
 
 
 if __name__ == "__main__":

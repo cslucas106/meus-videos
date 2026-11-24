@@ -56,6 +56,22 @@ export function fotoValida(f) {
     f.licenca.length <= 60
   );
 }
+export const MAX_SONS = 3;
+/** Som de ambiente do Freesound (prévia MP3; licença CC0 ou CC BY, sem "não comercial"). O app baixa em sons/som-N.mp3 (cena.somArquivo). */
+export function somValido(s) {
+  return (
+    !!s &&
+    typeof s === 'object' &&
+    /^https:\/\/cdn\.freesound\.org\/previews\/[\w/.-]+\.mp3$/.test(String(s.url || '')) &&
+    /^https:\/\/freesound\.org\/people\/[^\s"'<>]+$/.test(String(s.pagina || '')) &&
+    typeof s.autor === 'string' &&
+    !!s.autor.trim() &&
+    s.autor.length <= 80 &&
+    /^(CC0|CC BY \d(\.\d)?)$/.test(String(s.licenca || '')) &&
+    (s.titulo == null || (typeof s.titulo === 'string' && s.titulo.length <= 120)) &&
+    (s.fonte == null || (typeof s.fonte === 'string' && s.fonte.length <= 40))
+  );
+}
 
 /** Dado que é um ano (unidade "ano"): aparece sem ponto (1904) e só na linha do tempo, nunca como valor de gráfico. */
 // ---------- Cena "animacao": código que a IA escreve para uma animação que as cenas prontas não fazem ----------
@@ -421,6 +437,8 @@ export function validaPedido(p) {
     e(`no máximo ${MAX_ANIMACOES} cenas de animação por vídeo`);
   if (Array.isArray(p.cenas) && p.cenas.filter(c => c && c.foto != null).length > MAX_FOTOS)
     e(`no máximo ${MAX_FOTOS} fotos`);
+  if (Array.isArray(p.cenas) && p.cenas.filter(c => c && c.som != null).length > MAX_SONS)
+    e(`no máximo ${MAX_SONS} sons de ambiente`);
   if (p.post != null) {
     if (!p.post || typeof p.post !== 'object' || typeof p.post.texto !== 'string' || !p.post.texto.trim())
       e('post: falta o texto do post');
@@ -490,6 +508,10 @@ export function validaPedido(p) {
     const porId = Object.fromEntries(prontos.map(d => [d.id, d]));
     if (c.foto != null && !fotoValida(c.foto))
       e(`${onde}: foto inválida (precisa ser do Wikimedia Commons, do Pixabay ou da NASA, com autor, licença livre e página)`);
+    if (c.som != null && !somValido(c.som))
+      e(`${onde}: som inválido (precisa ser do Freesound, com autor, licença CC0 ou CC BY e página)`);
+    if (c.somArquivo != null && !/^som-\d{1,2}\.mp3$/.test(String(c.somArquivo)))
+      e(`${onde}: nome do arquivo de som inválido`);
     if (c.tipo === 'linhaTempo') {
       const ev = Array.isArray(c.eventos) ? c.eventos : [];
       if (ev.length < 2 || ev.length > MAX_ITENS) e(`${onde}: linhaTempo precisa de 2 a ${MAX_ITENS} eventos`);

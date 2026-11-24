@@ -145,6 +145,17 @@ def fotos_do_pedido(pedido):
     return out
 
 
+def sons_do_pedido(pedido):
+    """Sons de ambiente do Freesound que entraram no vídeo (uma vez cada), para o crédito."""
+    vistos, out = set(), []
+    for c in pedido.get("cenas", []):
+        s = c.get("som")
+        if s and c.get("somArquivo") and s.get("pagina") not in vistos:
+            vistos.add(s.get("pagina"))
+            out.append(s)
+    return out
+
+
 def nomes_das_fontes(pedido):
     """Instituições das fontes (o que vem antes do "·": "IBGE · Censo 2022" -> IBGE), uma vez cada, na ordem da tabela,
     para falar no fim do vídeo."""
@@ -187,6 +198,9 @@ def texto_do_post(pedido, fontes):
     fotos = fotos_do_pedido(pedido)
     if fotos:
         partes.append("Fotos: " + "; ".join(f"{ft['autor']} ({ft['licenca']}, {ft.get('fonte') or 'Wikimedia Commons'})" for ft in fotos))
+    sons = sons_do_pedido(pedido)
+    if sons:
+        partes.append("Sons: " + "; ".join(f"{s['autor']} ({s['licenca']}, Freesound)" for s in sons))
     tags = [t for t in (post.get("hashtags") or []) if isinstance(t, str) and t.startswith("#")]
     if tags:
         partes.append(" ".join(tags))
@@ -277,6 +291,11 @@ async def principal(entrada, pasta):
             f.write("\n### Fotos\n\n")
             for ft in fotos:
                 f.write(f"- [{ft['autor']}]({ft['pagina']}) · {ft['licenca']} · {ft.get('fonte') or 'Wikimedia Commons'}\n")
+        sons = sons_do_pedido(pedido)
+        if sons:
+            f.write("\n### Sons de ambiente (Freesound)\n\n")
+            for so in sons:
+                f.write(f"- [{so.get('titulo') or 'som'}]({so['pagina']}) · {so['autor']} · {so['licenca']}\n")
         f.write("\nArquivos: `video.mp4` (com narração), `video-sem-audio.mp4`, `narracao.mp3`, `legendas.srt`")
         f.write(", `capa.jpg` e `post.txt` (texto pronto para postar).\n" if pedido.get("post") else " e `capa.jpg`.\n")
     # kit para postar: só quando o pedido tem post (a pessoa pode desligar o post e as hashtags no app)

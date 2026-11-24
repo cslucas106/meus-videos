@@ -78,6 +78,9 @@ jobs:
           for d in "videos/$PEDIDO/fundos" "pedidos/$PEDIDO"; do
             [ -d "$d" ] && cp "$d"/fundo-* "$d"/foto-* public/fundos/ 2>/dev/null || true
           done
+          # sons de ambiente do Freesound que o app baixou (videos/<nome>/sons/som-N.mp3): o juntar.py mistura na cena
+          mkdir -p out/sons
+          [ -d "videos/$PEDIDO/sons" ] && cp "videos/$PEDIDO/sons"/som-* out/sons/ 2>/dev/null || true
           # fotos do Wikimedia Commons (cena.foto) que o app não mandou: baixadas aqui, com o crédito guardado no pedido
           node scripts/fotos.mjs out/pedido.json public/fundos
           # mapa de municípios (dados com "mun"): contorno das malhas do IBGE, guardado na própria cena

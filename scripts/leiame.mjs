@@ -73,6 +73,12 @@ export function montaLeiame(pedido, versoes) {
       for (const f of fotos) l.push(`- [${f.autor}](${f.pagina}) · ${f.licenca} · ${f.fonte || 'Wikimedia Commons'}`);
       l.push('');
     }
+    const sons = [...new Map((pedido.cenas || []).filter(c => c && c.som).map(c => [c.som.pagina, c.som])).values()];
+    if (sons.length) {
+      l.push('## Sons de ambiente (Freesound)', '');
+      for (const s of sons) l.push(`- [${s.titulo || 'som'}](${s.pagina}) · ${s.autor} · ${s.licenca}`);
+      l.push('');
+    }
   }
   l.push('## Versões publicadas', '');
   if (versoes.length) l.push(...versoes);

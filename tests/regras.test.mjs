@@ -214,3 +214,19 @@ test('fotos: Wikimedia Commons, Pixabay e NASA valem (com autor, licença e pág
   mal({ url: 'https://pixabay.com/get/a.jpg', pagina: 'https://pixabay.com/x', autor: 'X', licenca: 'Todos os direitos reservados' });
   mal({ url: 'https://pixabay.com/get/a.jpg', pagina: 'https://pixabay.com/x', autor: 'X', licenca: 'Licença Pixabay', fonte: 'x'.repeat(41) });
 });
+
+test('sons de ambiente: Freesound CC0 ou CC BY, até 3 por vídeo, arquivo som-N.mp3', async () => {
+  const { somValido, MAX_SONS } = await import('../scripts/regras.mjs');
+  const base = JSON.parse(readFileSync(new URL('../videos/exemplo/pedido.json', import.meta.url), 'utf8'));
+  const som = { url: 'https://cdn.freesound.org/previews/1/1_2-hq.mp3', pagina: 'https://freesound.org/people/joao/sounds/1/', autor: 'joao', licenca: 'CC0', fonte: 'Freesound' };
+  assert.ok(somValido(som));
+  assert.ok(somValido({ ...som, licenca: 'CC BY 4.0' }));
+  assert.ok(!somValido({ ...som, licenca: 'CC BY-NC 4.0' }));
+  assert.ok(!somValido({ ...som, url: 'https://evil.com/a.mp3' }));
+  const comSons = n => ({ ...base, cenas: base.cenas.map((c, i) => (i < n ? { ...c, som, somArquivo: `som-${i + 1}.mp3` } : c)) });
+  assert.deepEqual(validaPedido(comSons(MAX_SONS)).erros, []);
+  assert.ok(validaPedido(comSons(MAX_SONS + 1)).erros.some(m => /sons de ambiente/.test(m)));
+  const ruim = comSons(1);
+  ruim.cenas[0] = { ...ruim.cenas[0], somArquivo: '../x.mp3' };
+  assert.ok(validaPedido(ruim).erros.some(m => /arquivo de som/.test(m)));
+});

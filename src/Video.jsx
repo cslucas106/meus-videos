@@ -114,6 +114,7 @@ export const Video = props => {
             mostrarFontes={props.mostrarFontes !== false}
             avisoIA={props.avisoIA !== false}
             fotos={props.cenas.filter(c => c.foto && c.imagem).map(c => c.foto)}
+            sons={props.cenas.filter(c => c.som && c.somArquivo).map(c => c.som)}
           />
         </Cena>
       </Sequence>
