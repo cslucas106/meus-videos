@@ -426,6 +426,11 @@ export function validaPedido(p) {
     e(`legenda deve ser true, false ou ${LEGENDAS.join(', ')}`);
   if (p.musicaVolume != null && !(Number.isInteger(p.musicaVolume) && p.musicaVolume >= 0 && p.musicaVolume <= 100))
     e('musicaVolume deve ser um número inteiro de 0 a 100');
+  if (
+    p.sonsVolume != null &&
+    !(Number.isInteger(p.sonsVolume) && p.sonsVolume >= 0 && p.sonsVolume <= 100)
+  )
+    e('sonsVolume deve ser um número inteiro de 0 a 100');
   for (const k of ['falarFontes', 'mostrarFontes', 'avisoIA'])
     if (p[k] != null && typeof p[k] !== 'boolean') e(`${k} deve ser true ou false`);
 

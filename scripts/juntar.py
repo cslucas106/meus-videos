@@ -37,7 +37,13 @@ def ganho_trilha(volume):
     return round(0.6 * v / 100, 3)
 
 
-GANHO_AMBIENTE = 0.32  # som de ambiente: baixinho, por baixo da voz
+def ganho_ambiente(volume):
+    """sonsVolume (0 a 100, padrão 50) -> ganho dos sons de ambiente. 50% = 0,32: baixinho, por baixo da voz."""
+    try:
+        v = max(0, min(100, int(volume)))
+    except (TypeError, ValueError):
+        v = VOLUME_PADRAO
+    return round(0.64 * v / 100, 3)
 
 
 def sons_das_cenas(props, pasta):
@@ -57,17 +63,17 @@ def sons_das_cenas(props, pasta):
     return out
 
 
-def filtro_ambiente(k, inicio, dur, i):
+def filtro_ambiente(k, inicio, dur, i, ganho):
     """Um som de ambiente: corta na duração da cena, entra e sai devagar e começa junto com a cena."""
     saida = max(0.0, dur - 0.8)
     atraso = int(round(inicio * 1000))
     return (
         f"[{k}:a]aresample=44100,aformat=channel_layouts=mono,atrim=0:{dur:.3f},asetpts=PTS-STARTPTS,"
-        f"afade=t=in:d=0.4,afade=t=out:st={saida:.3f}:d=0.8,volume={GANHO_AMBIENTE},adelay={atraso}:all=1[amb{i}]"
+        f"afade=t=in:d=0.4,afade=t=out:st={saida:.3f}:d=0.8,volume={ganho},adelay={atraso}:all=1[amb{i}]"
     )
 
 
-def filtro_mistura(com_musica, com_efeitos, ganho=None, ambientes=()):
+def filtro_mistura(com_musica, com_efeitos, ganho=None, ambientes=(), ganho_amb=None):
     """Monta o filtro do ffmpeg. Entradas: 0 = voz, depois a trilha (se houver) e os efeitos (se houver).
     A música fica no volume escolhido e abaixa um pouco quando a voz fala (sidechain); os efeitos ficam por cima, baixinhos; a voz manda."""
     ganho = ganho_trilha(VOLUME_PADRAO) if ganho is None else ganho
@@ -84,7 +90,7 @@ def filtro_mistura(com_musica, com_efeitos, ganho=None, ambientes=()):
         mistura.append("[fx]")
         k += 1
     for i, (_arq, inicio, dur) in enumerate(ambientes):
-        partes.append(filtro_ambiente(k, inicio, dur, i))
+        partes.append(filtro_ambiente(k, inicio, dur, i, ganho_ambiente(VOLUME_PADRAO) if ganho_amb is None else ganho_amb))
         mistura.append(f"[amb{i}]")
         k += 1
     partes.append(f"{''.join(mistura)}amix=inputs={len(mistura)}:duration=first:normalize=0,alimiter=limit=0.95[a]")
@@ -126,7 +132,13 @@ def principal(pasta):
     roda(
         "ffmpeg", "-y", *entradas, "-i", imagem,
         "-filter_complex",
-        filtro_mistura(estilo != "nenhuma", com_efeitos, ganho_trilha(props.get("musicaVolume", VOLUME_PADRAO)), ambientes),
+        filtro_mistura(
+            estilo != "nenhuma",
+            com_efeitos,
+            ganho_trilha(props.get("musicaVolume", VOLUME_PADRAO)),
+            ambientes,
+            ganho_ambiente(props.get("sonsVolume", VOLUME_PADRAO)),
+        ),
         "-map", f"{n_audio}:v", "-map", "[a]",
         "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-shortest", saida,
     )
