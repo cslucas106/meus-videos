@@ -8,8 +8,19 @@ export const TIPOS = ['titulo', 'numero', 'barras', 'linha', 'texto', 'ranking',
 export const TRANSICOES = ['deslizar', 'zoom', 'subir', 'corte'];
 export const MUSICAS = ['calma', 'animada', 'nenhuma'];
 export const UFS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ');
+// Mapa de municípios: no máximo 30 cidades pintadas, todas do mesmo estado (o contorno vem das malhas do IBGE)
+export const MAX_MUNICIPIOS = 30;
+// Código IBGE do estado (os 2 primeiros dígitos do código de 7 dígitos do município) → sigla
+export const COD_UF = {
+  11: 'RO', 12: 'AC', 13: 'AM', 14: 'RR', 15: 'PA', 16: 'AP', 17: 'TO', 21: 'MA', 22: 'PI', 23: 'CE', 24: 'RN', 25: 'PB', 26: 'PE',
+  27: 'AL', 28: 'SE', 29: 'BA', 31: 'MG', 32: 'ES', 33: 'RJ', 35: 'SP', 41: 'PR', 42: 'SC', 43: 'RS', 50: 'MS', 51: 'MT', 52: 'GO', 53: 'DF'
+};
+/** "2304400" ou 2304400 (Fortaleza) → true: código IBGE de município de 7 dígitos, de um estado que existe */
+export const ehMunicipio = v => /^\d{7}$/.test(String(v ?? '')) && !!COD_UF[String(v).slice(0, 2)];
+/** Código do município → sigla do estado (ex. 2304400 → "CE"), ou null */
+export const ufDoMunicipio = v => (ehMunicipio(v) ? COD_UF[String(v).slice(0, 2)] : null);
 /** quantos dados cada tipo de gráfico aceita: [mínimo, máximo] */
-const LISTAS = { barras: [2, 8], linha: [2, 12], ranking: [3, 10], comparacao: [2, 2], mapa: [1, 27] };
+const LISTAS = { barras: [2, 8], linha: [2, 12], ranking: [3, 10], comparacao: [2, 2], mapa: [1, MAX_MUNICIPIOS] };
 export const VOZES = [
   'pt-BR-FranciscaNeural',
   'pt-BR-AntonioNeural',
@@ -328,10 +339,26 @@ export function validaPedido(p) {
     for (const id of usa || [])
       if (typeof id === 'string' && ehAno(porId[id]))
         e(`${onde}: o dado "${id}" é um ano; ano não entra em ${c.tipo} (use a cena linhaTempo)`);
-    if (c.tipo === 'mapa')
-      for (const id of c.dados || [])
-        if (porId[id] && !UFS.includes(String(porId[id].uf || '').toUpperCase()))
-          e(`${onde}: o dado "${id}" precisa do campo uf (sigla do estado, ex. CE) para ir no mapa`);
+    if (c.tipo === 'mapa') {
+      const ds = (Array.isArray(c.dados) ? c.dados : []).map(id => porId[id]).filter(Boolean);
+      const mun = ds.filter(d => d.mun != null);
+      if (mun.length) {
+        // mapa de municípios de um estado: cada dado com "mun" = código IBGE do município
+        if (mun.length < ds.length)
+          e(`${onde}: no mapa, ou todos os dados são de municípios (campo mun) ou todos são de estados (campo uf)`);
+        for (const d of mun)
+          if (!ehMunicipio(d.mun))
+            e(`${onde}: o dado "${d.id}" tem mun inválido (código IBGE do município, 7 dígitos, ex. 2304400 = Fortaleza)`);
+        const ufs = [...new Set(mun.map(d => ufDoMunicipio(d.mun)).filter(Boolean))];
+        if (ufs.length > 1) e(`${onde}: o mapa de municípios mostra um estado só (vieram ${ufs.join(', ')})`);
+        if (new Set(mun.map(d => String(d.mun))).size < mun.length) e(`${onde}: o mesmo município aparece duas vezes no mapa`);
+      } else {
+        if (ds.length > UFS.length) e(`${onde}: o mapa do Brasil tem só ${UFS.length} estados`);
+        for (const id of c.dados || [])
+          if (porId[id] && !UFS.includes(String(porId[id].uf || '').toUpperCase()))
+            e(`${onde}: o dado "${id}" precisa do campo uf (sigla do estado, ex. CE) ou mun (código IBGE do município) para ir no mapa`);
+      }
+    }
     if (c.tipo === 'icones' && porId[c.dado]) {
       const d = porId[c.dado];
       if (d.unidade !== '%' || d.valor < 0 || d.valor > 100)

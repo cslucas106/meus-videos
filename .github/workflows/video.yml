@@ -21,6 +21,12 @@ on:
       pedido:
         description: 'Nome do pedido (a pasta videos/<nome>/)'
         required: true
+      modo:
+        description: 'video = o vídeo inteiro; storyboard = só uma foto de cada cena e a narração, para conferir antes'
+        required: false
+        default: video
+        type: choice
+        options: [video, storyboard]
 
 permissions:
   contents: write
@@ -35,6 +41,7 @@ jobs:
     timeout-minutes: 30
     env:
       PEDIDO: ${{ github.event.inputs.pedido || 'exemplo' }}
+      MODO: ${{ github.event.inputs.modo || 'video' }}
     steps:
       - name: Confere o nome do pedido
         run: |
@@ -73,18 +80,43 @@ jobs:
           done
           # fotos do Wikimedia Commons (cena.foto): baixadas aqui, com o crédito guardado no pedido
           node scripts/fotos.mjs out/pedido.json public/fundos
+          # mapa de municípios (dados com "mun"): contorno das malhas do IBGE, guardado na própria cena
+          node scripts/malhas.mjs out/pedido.json
 
       - name: 2/4 Gera a narração
         run: python scripts/narrar.py out/pedido.json out
 
+      # Storyboard: uma foto de cada cena + a narração, num Release storyboard-<nome>-<execução> (o app mostra e pergunta se gera o vídeo)
+      - name: "Storyboard: uma foto de cada cena"
+        if: env.MODO == 'storyboard'
+        run: node scripts/storyboard.mjs out/props.json out/storyboard
+
+      - name: Publica o storyboard
+        if: env.MODO == 'storyboard' && github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="storyboard-$PEDIDO-$GITHUB_RUN_NUMBER"
+          TITULO=$(node -e "console.log('Storyboard: ' + JSON.parse(require('fs').readFileSync('out/pedido.json','utf8')).titulo)")
+          # o storyboard anterior do mesmo pedido não serve mais
+          for t in $(gh release list --limit 100 --json tagName --jq '.[].tagName' | grep "^storyboard-$PEDIDO-[0-9]*$" || true); do
+            gh release delete "$t" --yes --cleanup-tag || true
+          done
+          gh release create "$TAG" out/storyboard/*.jpg out/narracao.mp3 \
+            --title "$TITULO" --notes-file out/storyboard/notas.md --target "$GITHUB_SHA" --prerelease
+          echo "### Storyboard: [$TITULO](https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG)" >> "$GITHUB_STEP_SUMMARY"
+
       - name: 3/4 Desenha as cenas (Remotion)
+        if: env.MODO != 'storyboard'
         run: npx remotion render src/index.jsx Video out/video-sem-audio.mp4 --props=out/props.json
 
       - name: 4/4 Junta vídeo, voz e trilha
+        if: env.MODO != 'storyboard'
         run: python scripts/juntar.py out
 
       # Kit para postar: a capa é uma foto da abertura (sem legenda). Se falhar, o vídeo sai do mesmo jeito.
       - name: Capa do vídeo
+        if: env.MODO != 'storyboard'
         continue-on-error: true
         run: |
           QUADRO=$(node scripts/capa.mjs out/props.json out/props-capa.json)
@@ -108,7 +140,7 @@ jobs:
           retention-days: 7
 
       - name: Publica no Release
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch' && env.MODO != 'storyboard'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -125,7 +157,19 @@ jobs:
 
       # O LEIAME.md da pasta ganha o link desta versão. Se não der para gravar, o vídeo continua pronto no Release.
       - name: Atualiza o LEIAME.md
-        if: github.event_name == 'workflow_dispatch' && hashFiles(format('videos/{0}/pedido.json', env.PEDIDO)) != ''
+        if: github.event_name == 'workflow_dispatch' && env.MODO != 'storyboard' && hashFiles(format('videos/{0}/pedido.json', env.PEDIDO)) != ''
         continue-on-error: true
         run: bash scripts/grava-leiame.sh "videos/$PEDIDO" "$TAG"
 
+      # Limpeza: o storyboard deste vídeo (já virou vídeo) e os storyboards de mais de 3 dias que ninguém aprovou.
+      # Se falhar, não faz mal: o vídeo já está pronto.
+      - name: Apaga storyboards velhos
+        if: github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          LIMITE=$(date -u -d '3 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          gh release list --limit 100 --json tagName,createdAt \
+            --jq ".[] | select(.tagName | startswith(\"storyboard-\")) | select((.tagName | test(\"^storyboard-$PEDIDO-[0-9]+$\")) and \"$MODO\" == \"video\" or .createdAt < \"$LIMITE\") | .tagName" |
+            while read -r t; do gh release delete "$t" --yes --cleanup-tag || true; done

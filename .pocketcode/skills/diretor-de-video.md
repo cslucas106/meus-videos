@@ -20,7 +20,7 @@ Pense como quem edita um vídeo curto de rede social, não como quem faz slides.
 | `ranking` | quem é maior (3 a 10) | `dados` |
 | `barras` | poucos valores lado a lado (2 a 8) | `dados` |
 | `linha` | evolução no tempo (2 a 12, em ordem; cada dado com `x`, ex. "2019") | `dados` |
-| `mapa` | estados (cada dado com `uf`, ex. "CE") | `dados` |
+| `mapa` | estados (cada dado com `uf`, ex. "CE") **ou** municípios de um estado (até 30, cada dado com `mun` = código IBGE de 7 dígitos, ex. 2304400 = Fortaleza; todos do mesmo estado) | `dados` |
 | `icones` | porcentagem ("38 em cada 100") | `dado` com unidade `%` |
 | `texto` | frase de impacto ou conclusão | `texto` |
 | `linhaTempo` | acontecimentos em ordem (2 a 6), sem gráfico | `eventos`: `[{"dado": "id de um ano", "texto": "o que aconteceu"}]` |

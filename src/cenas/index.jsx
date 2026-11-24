@@ -3,6 +3,7 @@
 import brasil from '@svg-maps/brazil';
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
 import { COR, comUnidade, curto, ehAno, formata, urlBonita } from '../estilo.js';
+import { ufDoMunicipio } from '../../scripts/regras.mjs';
 import { Cabeca, momentoNumero, Palco, Rodape, Sobe, useEntrada, useU, useVertical } from '../base.jsx';
 
 const lista = (cena, dados) => (cena.dados || []).map(id => dados[id]).filter(Boolean);
@@ -200,31 +201,46 @@ export const Comparacao = ({ cena, dados }) => {
   );
 };
 
-/** Mapa do Brasil: um estado aceso, ou vários pintados pelo valor (mais escuro = menor). */
+/** Mapa do Brasil (um estado aceso, ou vários pintados pelo valor: mais escuro = menor) ou mapa dos municípios de um
+    estado (dados com "mun"; o contorno vem das malhas do IBGE em cena.malha, baixado pelo scripts/malhas.mjs).
+    Sem a malha (o IBGE não respondeu), mostra o estado aceso no mapa do Brasil, com a lista dos municípios. */
 export const Mapa = ({ cena, dados }) => {
   const u = useU();
   const vertical = useVertical();
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const l = lista(cena, dados);
-  const porUf = Object.fromEntries(l.map(d => [String(d.uf || '').toLowerCase(), d]));
+  const municipios = l.length > 0 && l.every(d => d.mun != null);
+  const malha = municipios && cena.malha && Array.isArray(cena.malha.areas) ? cena.malha : null;
   const vals = l.map(d => d.valor);
   const min = Math.min(...vals);
   const max = Math.max(...vals);
   const inicio = momentoNumero(cena, fps);
   const ordem = [...l].sort((a, b) => b.valor - a.valor);
-  const [vx, vy, vw, vh] = brasil.viewBox.split(' ').map(Number);
-  const tam = (vertical ? 700 : 600) * u;
+  // cada pedaço do desenho: id (sigla do estado em minúsculas ou código do município) e o caminho
+  const formas = malha ? malha.areas.map(a => ({ id: String(a.cod), path: a.d })) : brasil.locations;
+  const viewBox = malha ? malha.viewBox : brasil.viewBox;
+  const porId = {};
+  if (malha) for (const d of l) porId[String(d.mun)] = d;
+  else if (municipios) {
+    const uf = String(ufDoMunicipio(l[0].mun) || '').toLowerCase();
+    porId[uf] = ordem[0]; // sem malha: só o estado aceso
+  } else for (const d of l) porId[String(d.uf || '').toLowerCase()] = d;
+  const [, , vw, vh] = viewBox.split(' ').map(Number);
+  // municípios: o estado pode ser comprido para o lado ou para cima; cabe numa caixa do tamanho do mapa do Brasil
+  const caixa = (vertical ? 700 : 600) * u;
+  const esc = Math.min(caixa / vw, (caixa * 1.05) / vh);
+  const linhas = municipios ? 6 : 5;
   return (
     <Palco>
       <Cabeca texto={cena.titulo} />
       <div style={{ display: 'flex', flexDirection: vertical ? 'column' : 'row', alignItems: 'center', gap: 30 * u }}>
-        <svg viewBox={`${vx} ${vy} ${vw} ${vh}`} width={tam} height={(tam * vh) / vw} style={{ flex: 'none' }}>
-          {brasil.locations.map(loc => {
-            const d = porUf[loc.id];
+        <svg viewBox={viewBox} width={vw * esc} height={vh * esc} style={{ flex: 'none' }}>
+          {formas.map(loc => {
+            const d = porId[loc.id];
             const k = d ? ordem.indexOf(d) : 0;
-            const e = d ? spring({ frame: frame - inicio - k * 4, fps, config: { damping: 20 } }) : 0;
-            const forca = d ? (l.length === 1 || max === min ? 1 : 0.35 + (0.65 * (d.valor - min)) / (max - min)) : 0;
+            const e = d ? spring({ frame: frame - inicio - Math.min(k, 20) * 3, fps, config: { damping: 20 } }) : 0;
+            const forca = d ? (l.length === 1 || max === min || (municipios && !malha) ? 1 : 0.35 + (0.65 * (d.valor - min)) / (max - min)) : 0;
             return (
               <path
                 key={loc.id}
@@ -232,15 +248,16 @@ export const Mapa = ({ cena, dados }) => {
                 fill={d ? COR.destaque : COR.cartao}
                 fillOpacity={d ? 0.15 + 0.85 * forca * e : 1}
                 stroke={COR.borda}
-                strokeWidth={1.2}
+                strokeWidth={malha ? 0.8 / esc : 1.2}
+                strokeLinejoin="round"
               />
             );
           })}
         </svg>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 * u, minWidth: 0 }}>
-          {ordem.slice(0, 5).map((d, i) => (
+          {ordem.slice(0, linhas).map((d, i) => (
             <Sobe key={d.id} atraso={inicio + i * 4}>
-              <div style={{ fontSize: 38 * u, display: 'flex', gap: 16 * u, justifyContent: 'space-between' }}>
+              <div style={{ fontSize: (municipios ? 34 : 38) * u, display: 'flex', gap: 16 * u, justifyContent: 'space-between' }}>
                 <span>{rotulo(d)}</span>
                 <b style={{ color: COR.destaque }}>{valorCurto(d)}</b>
               </div>
@@ -490,7 +507,7 @@ export const Texto = ({ cena }) => {
   );
 };
 
-export const Fontes = ({ dados, titulo, temMapa, musica, livre, fotos = [] }) => {
+export const Fontes = ({ dados, titulo, temMapa, temMalha, musica, livre, fotos = [] }) => {
   const u = useU();
   const fontes = new Map();
   for (const d of dados) {
@@ -551,6 +568,7 @@ export const Fontes = ({ dados, titulo, temMapa, musica, livre, fotos = [] }) =>
               : 'Nenhum número ou data deste vídeo foi conferido numa fonte.'
             : `Dados públicos. Números conferidos automaticamente antes do vídeo. ${formata(dados.length)} dados usados.`}
           {temMapa ? ' Mapa: svg-maps/brazil (CC BY 4.0).' : ''}
+          {temMalha ? ' Municípios: malhas territoriais do IBGE.' : ''}
           {musica && musica !== 'nenhuma' ? ' Trilha gerada pelo próprio modelo.' : ''}
         </div>
       </Sobe>

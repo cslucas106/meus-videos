@@ -103,7 +103,8 @@ export const Video = props => {
           <Fontes
             dados={props.dados || []}
             titulo={props.titulo}
-            temMapa={props.cenas.some(c => c.tipo === 'mapa')}
+            temMapa={props.cenas.some(c => c.tipo === 'mapa' && !c.malha)}
+            temMalha={props.cenas.some(c => c.tipo === 'mapa' && c.malha)}
             musica={props.musica}
             livre={!!props.livre}
             fotos={props.cenas.filter(c => c.foto && c.imagem).map(c => c.foto)}
