@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { validaPedido } from '../scripts/regras.mjs';
 import { linhaVersao, montaLeiame, versoesDe } from '../scripts/leiame.mjs';
 
-const RAIZ = new URL('..', import.meta.url).pathname;
+const RAIZ = new URL('../..', import.meta.url).pathname; // a raiz do repositório (o código fica em motor/)
 const NOME = /^[a-z0-9][a-z0-9-]{0,59}$/;
 const pastas = tipo =>
   existsSync(join(RAIZ, tipo)) ? readdirSync(join(RAIZ, tipo)).filter(n => statSync(join(RAIZ, tipo, n)).isDirectory()) : [];
@@ -29,10 +29,13 @@ test('videos/: cada pasta tem um pedido de vídeo válido e só arquivos conheci
     assert.notEqual(p.tipo, 'voz', `videos/${n} é uma narração (vai em audios/)`);
     assert.deepEqual(validaPedido(p).erros, [], `videos/${n}/pedido.json`);
     for (const a of readdirSync(join(RAIZ, 'videos', n)))
-      assert.ok(['pedido.json', 'LEIAME.md', 'fundos'].includes(a), `arquivo estranho em videos/${n}: ${a}`);
+      assert.ok(['pedido.json', 'LEIAME.md', 'fundos', 'sons'].includes(a), `arquivo estranho em videos/${n}: ${a}`);
     if (existsSync(join(RAIZ, 'videos', n, 'fundos')))
       for (const f of readdirSync(join(RAIZ, 'videos', n, 'fundos')))
-        assert.match(f, /^fundo-\d{1,2}\.(jpg|png)$/, `videos/${n}/fundos/${f}`);
+        assert.match(f, /^(fundo|foto)-\d{1,2}\.(jpg|png)$/, `videos/${n}/fundos/${f}`);
+    if (existsSync(join(RAIZ, 'videos', n, 'sons')))
+      for (const f of readdirSync(join(RAIZ, 'videos', n, 'sons')))
+        assert.match(f, /^som-\d{1,2}\.mp3$/, `videos/${n}/sons/${f}`);
   }
 });
 

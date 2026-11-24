@@ -18,8 +18,13 @@ jobs:
     timeout-minutes: 15
     env:
       PEDIDO: ${{ github.event.inputs.pedido }}
+    # o código fica em motor/; os pedidos em ../audios/
+    defaults:
+      run:
+        working-directory: motor
     steps:
       - name: Confere o nome do pedido
+        working-directory: .
         run: |
           if [[ ! "$PEDIDO" =~ ^[a-z0-9][a-z0-9-]{0,59}$ ]]; then
             echo "::error::Nome inválido. Use só letras minúsculas, números e hífen."
@@ -38,9 +43,9 @@ jobs:
 
       - name: Gera a narração
         run: |
-          ARQ="audios/$PEDIDO/pedido.json"
+          ARQ="../audios/$PEDIDO/pedido.json"
           # app antigo (antes da 1.7.0) ainda grava em pedidos/<nome>.json
-          [ -f "$ARQ" ] || ARQ="pedidos/$PEDIDO.json"
+          [ -f "$ARQ" ] || ARQ="../pedidos/$PEDIDO.json"
           echo "ARQ=$ARQ" >> "$GITHUB_ENV"
           python scripts/narrar.py "$ARQ" out
 

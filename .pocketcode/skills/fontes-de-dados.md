@@ -11,7 +11,7 @@ Use quando for criar ou mudar um pedido em `videos/<nome>/pedido.json`.
 2. Contas (variação, diferença) viram um dado com `"calculo": "(b - a) / a * 100"` usando os ids.
 3. Na `narracao` e nos textos só aparecem números da tabela. Pode arredondar ao falar ("203 milhões").
 4. Se o dado não existe nas fontes, não invente: tire a cena ou avise.
-5. Antes de entregar, rode `node scripts/verifica.mjs videos/<nome>/pedido.json`.
+5. Antes de entregar, rode `node motor/scripts/verifica.mjs videos/<nome>/pedido.json`.
 
 Fontes liberadas no PocketCode (modo Vídeo):
 - IBGE (servicodados.ibge.gov.br): agregados v3, localidades, nomes

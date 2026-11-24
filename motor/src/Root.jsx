@@ -1,6 +1,6 @@
 import { Composition } from 'remotion';
 import { Video } from './Video.jsx';
-import exemplo from '../videos/exemplo/pedido.json';
+import exemplo from '../../videos/exemplo/pedido.json';
 
 const TAMANHO = { vertical: [1080, 1920], horizontal: [1920, 1080] };
 const FPS = 30;

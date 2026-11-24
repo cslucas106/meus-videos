@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 # Atualiza o LEIAME.md de videos/<nome> ou audios/<nome> com o link do Release e grava no repositório.
 # Uso (dentro do GitHub Actions): bash scripts/grava-leiame.sh <pasta> <tag>
+#   <pasta> é a partir da raiz do repositório (videos/<nome> ou audios/<nome>); o script vai para a raiz antes de tudo.
 # Tenta 5 vezes: se outro commit chegou antes (outro vídeo, um item apagado pelo app), junta com ele e tenta de novo.
 set -u
+AQUI="$(cd "$(dirname "$0")" && pwd)"
+cd "$(git rev-parse --show-toplevel)" || exit 1
 PASTA="$1"
 TAG="$2"
 RAMO="${GITHUB_REF_NAME:-main}"
 LINK="https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG"
 
-node scripts/leiame.mjs "$PASTA" "$TAG" "$LINK" || exit 1
+node "$AQUI/leiame.mjs" "$PASTA" "$TAG" "$LINK" || exit 1
 git config user.name "github-actions[bot]"
 git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
 git add "$PASTA/LEIAME.md"

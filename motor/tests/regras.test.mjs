@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { bateComTabela, calcula, lerNumero, numerosDoTexto, validaPedido } from '../scripts/regras.mjs';
 
-const exemplo = () => JSON.parse(readFileSync(new URL('../videos/exemplo/pedido.json', import.meta.url), 'utf8'));
+const exemplo = () => JSON.parse(readFileSync(new URL('../../videos/exemplo/pedido.json', import.meta.url), 'utf8'));
 const dados = [{ id: 'a', rotulo: 'Censo 2022', valor: 203080756, fonte: 'IBGE', data: '2022-08-01' }];
 
 test('lê números do jeito brasileiro', () => {
@@ -188,7 +188,7 @@ test('tema, efeitos e foto do Wikimedia Commons (com crédito)', () => {
 });
 
 test('opções novas: estilos de legenda e efeitos, volume da trilha, trilhas novas e a tela final', () => {
-  const base = JSON.parse(readFileSync(new URL('../videos/exemplo/pedido.json', import.meta.url), 'utf8'));
+  const base = JSON.parse(readFileSync(new URL('../../videos/exemplo/pedido.json', import.meta.url), 'utf8'));
   const ok = x => assert.deepEqual(validaPedido({ ...base, ...x }).erros, [], JSON.stringify(x));
   const mal = (x, re) => assert.ok(validaPedido({ ...base, ...x }).erros.some(m => re.test(m)), JSON.stringify(x));
   for (const legenda of [true, false, 'animada', 'simples', 'grande', 'caixa']) ok({ legenda });
@@ -217,7 +217,7 @@ test('fotos: Wikimedia Commons, Pixabay e NASA valem (com autor, licença e pág
 
 test('sons de ambiente: Freesound CC0 ou CC BY, até 3 por vídeo, arquivo som-N.mp3', async () => {
   const { somValido, MAX_SONS } = await import('../scripts/regras.mjs');
-  const base = JSON.parse(readFileSync(new URL('../videos/exemplo/pedido.json', import.meta.url), 'utf8'));
+  const base = JSON.parse(readFileSync(new URL('../../videos/exemplo/pedido.json', import.meta.url), 'utf8'));
   const som = { url: 'https://cdn.freesound.org/previews/1/1_2-hq.mp3', pagina: 'https://freesound.org/people/joao/sounds/1/', autor: 'joao', licenca: 'CC0', fonte: 'Freesound' };
   assert.ok(somValido(som));
   assert.ok(somValido({ ...som, licenca: 'CC BY 4.0' }));

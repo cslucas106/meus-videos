@@ -10,11 +10,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'src/**'
-      - 'scripts/**'
+      - 'motor/**'
       - 'videos/exemplo/**'
-      - 'package.json'
-      - 'package-lock.json'
       - '.github/workflows/video.yml'
   workflow_dispatch:
     inputs:
@@ -42,8 +39,13 @@ jobs:
     env:
       PEDIDO: ${{ github.event.inputs.pedido || 'exemplo' }}
       MODO: ${{ github.event.inputs.modo || 'video' }}
+    # o código (scripts, cenas do Remotion, package.json) fica em motor/; os pedidos em ../videos/
+    defaults:
+      run:
+        working-directory: motor
     steps:
       - name: Confere o nome do pedido
+        working-directory: .
         run: |
           if [[ ! "$PEDIDO" =~ ^[a-z0-9][a-z0-9-]{0,59}$ ]]; then
             echo "::error::Nome inválido. Use só letras minúsculas, números e hífen."
@@ -56,6 +58,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: motor/package-lock.json
 
       - uses: actions/setup-python@v5
         with:
@@ -69,18 +72,18 @@ jobs:
 
       - name: 1/4 Confere os números do roteiro
         run: |
-          ARQ="videos/$PEDIDO/pedido.json"
+          ARQ="../videos/$PEDIDO/pedido.json"
           # app antigo (antes da 1.7.0) ainda grava em pedidos/<nome>.json
-          [ -f "$ARQ" ] || ARQ="pedidos/$PEDIDO.json"
+          [ -f "$ARQ" ] || ARQ="../pedidos/$PEDIDO.json"
           node scripts/verifica.mjs "$ARQ" out/pedido.json
           # imagens de fundo do pedido (videos/<nome>/fundos/fundo-N.jpg) e fotos do Commons que o app já baixou (foto-N.jpg), se houver
           mkdir -p public/fundos
-          for d in "videos/$PEDIDO/fundos" "pedidos/$PEDIDO"; do
+          for d in "../videos/$PEDIDO/fundos" "../pedidos/$PEDIDO"; do
             [ -d "$d" ] && cp "$d"/fundo-* "$d"/foto-* public/fundos/ 2>/dev/null || true
           done
           # sons de ambiente do Freesound que o app baixou (videos/<nome>/sons/som-N.mp3): o juntar.py mistura na cena
           mkdir -p out/sons
-          [ -d "videos/$PEDIDO/sons" ] && cp "videos/$PEDIDO/sons"/som-* out/sons/ 2>/dev/null || true
+          [ -d "../videos/$PEDIDO/sons" ] && cp "../videos/$PEDIDO/sons"/som-* out/sons/ 2>/dev/null || true
           # fotos do Wikimedia Commons (cena.foto) que o app não mandou: baixadas aqui, com o crédito guardado no pedido
           node scripts/fotos.mjs out/pedido.json public/fundos
           # mapa de municípios (dados com "mun"): contorno das malhas do IBGE, guardado na própria cena
@@ -132,13 +135,13 @@ jobs:
         with:
           name: video-de-teste
           path: |
-            out/video.mp4
-            out/video-sem-audio.mp4
-            out/narracao.mp3
-            out/legendas.srt
-            out/trilha.mp3
-            out/capa.jpg
-            out/post.txt
+            motor/out/video.mp4
+            motor/out/video-sem-audio.mp4
+            motor/out/narracao.mp3
+            motor/out/legendas.srt
+            motor/out/trilha.mp3
+            motor/out/capa.jpg
+            motor/out/post.txt
           if-no-files-found: ignore
           retention-days: 7
 

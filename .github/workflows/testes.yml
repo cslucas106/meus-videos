@@ -14,3 +14,4 @@ jobs:
           node-version: 22
       # inclui tests/estrutura.test.mjs: confere as pastas videos/, audios/ e imagens/ e todos os pedidos de vídeo
       - run: node --test tests/*.test.mjs
+        working-directory: motor
