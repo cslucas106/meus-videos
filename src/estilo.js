@@ -26,5 +26,20 @@ export function curto(valor) {
   return formata(valor);
 }
 
+/** Ano (unidade "ano") aparece sem ponto: 1904, e não 1.904 */
+export const ehAno = d => !!d && /^anos?$/i.test(String(d.unidade || '').trim());
+
 export const comUnidade = (d, valor = d.valor) =>
-  d.unidade === '%' ? `${formata(valor, d.casas)}%` : d.unidade === 'R$' ? `R$ ${formata(valor, d.casas ?? 2)}` : formata(valor, d.casas);
+  ehAno(d)
+    ? String(Math.round(valor))
+    : d.unidade === '%'
+      ? `${formata(valor, d.casas)}%`
+      : d.unidade === 'R$'
+        ? `R$ ${formata(valor, d.casas ?? 2)}`
+        : formata(valor, d.casas);
+
+/** Link legível: a API da Wikipédia (w/api.php?…titles=X) vira o artigo (wiki/X) */
+export const urlBonita = u => {
+  const m = /^https:\/\/([a-z]{2,3}\.wikipedia\.org)\/w\/api\.php\?.*[?&]titles=([^&]+)/.exec(String(u || ''));
+  return m ? `https://${m[1]}/wiki/${decodeURIComponent(m[2]).replace(/ /g, '_')}` : String(u || '');
+};

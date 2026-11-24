@@ -81,6 +81,14 @@ jobs:
       - name: 4/4 Junta vídeo, voz e trilha
         run: python scripts/juntar.py out
 
+      # Kit para postar: a capa é uma foto da abertura (sem legenda). Se falhar, o vídeo sai do mesmo jeito.
+      - name: Capa do vídeo
+        continue-on-error: true
+        run: |
+          QUADRO=$(node scripts/capa.mjs out/props.json out/props-capa.json)
+          npx remotion still src/index.jsx Video out/capa.jpg --props=out/props-capa.json \
+            --frame="$QUADRO" --image-format=jpeg --jpeg-quality=90
+
       - name: Guarda o vídeo de teste
         if: github.event_name == 'push'
         uses: actions/upload-artifact@v4
@@ -92,6 +100,8 @@ jobs:
             out/narracao.mp3
             out/legendas.srt
             out/trilha.mp3
+            out/capa.jpg
+            out/post.txt
           if-no-files-found: ignore
           retention-days: 7
 
@@ -104,6 +114,8 @@ jobs:
           TITULO=$(node -e "console.log(JSON.parse(require('fs').readFileSync('out/pedido.json','utf8')).titulo)")
           ARQS="out/video.mp4 out/video-sem-audio.mp4 out/narracao.mp3 out/legendas.srt"
           [ -f out/trilha.mp3 ] && ARQS="$ARQS out/trilha.mp3"
+          [ -f out/capa.jpg ] && ARQS="$ARQS out/capa.jpg"
+          [ -f out/post.txt ] && ARQS="$ARQS out/post.txt"
           gh release create "$TAG" $ARQS \
             --title "$TITULO" --notes-file out/notas.md --target "$GITHUB_SHA"
           echo "### Pronto: [$TITULO](https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG)" >> "$GITHUB_STEP_SUMMARY"

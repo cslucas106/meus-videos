@@ -5,7 +5,20 @@ import '@fontsource/inter/800.css';
 import { AbsoluteFill, Sequence, useCurrentFrame, useVideoConfig } from 'remotion';
 import { COR } from './estilo.js';
 import { Cena } from './Cena.jsx';
-import { Barras, Comparacao, Fontes, Icones, Linha, Mapa, Numero, Ranking, Texto, Titulo } from './cenas/index.jsx';
+import {
+  Barras,
+  Comparacao,
+  Fontes,
+  Icones,
+  Linha,
+  LinhaTempo,
+  Lista,
+  Mapa,
+  Numero,
+  Ranking,
+  Texto,
+  Titulo
+} from './cenas/index.jsx';
 
 const CENAS = {
   titulo: Titulo,
@@ -16,7 +29,9 @@ const CENAS = {
   ranking: Ranking,
   comparacao: Comparacao,
   mapa: Mapa,
-  icones: Icones
+  icones: Icones,
+  linhaTempo: LinhaTempo,
+  lista: Lista
 };
 
 const Progresso = () => {
@@ -79,6 +94,7 @@ export const Video = props => {
             titulo={props.titulo}
             temMapa={props.cenas.some(c => c.tipo === 'mapa')}
             musica={props.musica}
+            livre={!!props.livre}
           />
         </Cena>
       </Sequence>

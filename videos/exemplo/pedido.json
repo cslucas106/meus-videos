@@ -47,6 +47,33 @@
       "calculo": "fort2022 / ce2022 * 100",
       "fonte": "Cálculo com dados do IBGE",
       "data": "2022"
+    },
+    {
+      "id": "vila",
+      "rotulo": "Fortaleza vira vila",
+      "valor": 1726,
+      "unidade": "ano",
+      "fonte": "Wikipédia · Fortaleza",
+      "url": "https://pt.wikipedia.org/wiki/Fortaleza",
+      "data": "consultado em 2026-11"
+    },
+    {
+      "id": "cidade",
+      "rotulo": "Fortaleza vira cidade",
+      "valor": 1823,
+      "unidade": "ano",
+      "fonte": "Wikipédia · Fortaleza",
+      "url": "https://pt.wikipedia.org/wiki/Fortaleza",
+      "data": "consultado em 2026-11"
+    },
+    {
+      "id": "anocenso",
+      "rotulo": "Ano do último Censo",
+      "valor": 2022,
+      "unidade": "ano",
+      "fonte": "IBGE · Censo 2022",
+      "url": "https://www.ibge.gov.br/cidades-e-estados/ce/fortaleza",
+      "data": "2022"
     }
   ],
   "cenas": [
@@ -66,14 +93,19 @@
     {
       "tipo": "comparacao",
       "titulo": "Censo e estimativa",
-      "dados": ["fort2022", "fort2025"],
+      "dados": [
+        "fort2022",
+        "fort2025"
+      ],
       "narracao": "E a estimativa do IBGE para 2025 já passa de 2 milhões e 500 mil.",
       "transicao": "deslizar"
     },
     {
       "tipo": "mapa",
       "titulo": "O Ceará inteiro",
-      "dados": ["ce2022"],
+      "dados": [
+        "ce2022"
+      ],
       "narracao": "O Ceará inteiro tinha 8,8 milhões de pessoas no Censo.",
       "transicao": "subir"
     },
@@ -85,10 +117,50 @@
       "transicao": "zoom"
     },
     {
+      "tipo": "linhaTempo",
+      "titulo": "Do povoado à metrópole",
+      "eventos": [
+        {
+          "dado": "vila",
+          "texto": "Fortaleza vira vila"
+        },
+        {
+          "dado": "cidade",
+          "texto": "Fortaleza vira cidade"
+        },
+        {
+          "dado": "anocenso",
+          "texto": "Censo conta 2,4 milhões de moradores"
+        }
+      ],
+      "narracao": "Vila em 1726, cidade em 1823 e, no Censo de 2022, uma das maiores capitais do país.",
+      "transicao": "deslizar"
+    },
+    {
+      "tipo": "lista",
+      "titulo": "Para não confundir",
+      "itens": [
+        "Censo: conta todos os moradores, casa por casa",
+        "Estimativa: calcula a população entre um Censo e outro",
+        "Os dois são feitos pelo IBGE"
+      ],
+      "narracao": "O Censo conta casa por casa; a estimativa calcula entre um Censo e outro; e os dois são feitos pelo IBGE.",
+      "transicao": "subir"
+    },
+    {
       "tipo": "texto",
       "texto": "Mais de um em cada quatro cearenses é fortalezense.",
       "narracao": "Mais de um em cada quatro cearenses é fortalezense.",
       "transicao": "corte"
     }
-  ]
+  ],
+  "post": {
+    "texto": "Fortaleza tinha 2,4 milhões de moradores no Censo de 2022, e a estimativa do IBGE para 2025 já passa de 2,5 milhões. De vila em 1726 a uma das maiores capitais do país.",
+    "hashtags": [
+      "#Fortaleza",
+      "#Ceará",
+      "#IBGE",
+      "#dados"
+    ]
+  }
 }

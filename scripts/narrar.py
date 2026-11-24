@@ -127,6 +127,27 @@ async def so_voz(pedido, pasta, tmp):
     print(f"Narração pronta: {duracao(bruto):.1f} s")
 
 
+def url_bonita(u):
+    """A API da Wikipédia (w/api.php?...titles=X) vira o link do artigo (wiki/X)."""
+    import urllib.parse
+    m = re.match(r"^https://([a-z]{2,3}\.wikipedia\.org)/w/api\.php\?.*[?&]titles=([^&]+)", u or "")
+    return f"https://{m.group(1)}/wiki/{urllib.parse.unquote(m.group(2)).replace(' ', '_')}" if m else (u or "")
+
+
+def texto_do_post(pedido, fontes):
+    """Kit para postar: o texto do post (escrito pela IA e conferido), as fontes e as hashtags, pronto para copiar."""
+    post = pedido.get("post") or {}
+    partes = [str(post.get("texto") or pedido.get("titulo") or "").strip()]
+    if pedido.get("livre"):
+        partes.append("✍️ Texto escrito com IA, sem fonte conferida.")
+    if fontes:
+        partes.append("Fontes: " + "; ".join(sorted({fonte for (fonte, _url) in fontes})))
+    tags = [t for t in (post.get("hashtags") or []) if isinstance(t, str) and t.startswith("#")]
+    if tags:
+        partes.append(" ".join(tags))
+    return "\n\n".join(p for p in partes if p) + "\n"
+
+
 async def principal(entrada, pasta):
     os.makedirs(pasta, exist_ok=True)
     tmp = os.path.join(pasta, "partes")
@@ -182,15 +203,22 @@ async def principal(entrada, pasta):
     fontes = {}
     for d in pedido.get("dados", []):
         if d.get("url") or d.get("manual"):
-            fontes.setdefault((d["fonte"], d.get("url") or ""), []).append(
+            fontes.setdefault((d["fonte"], url_bonita(d.get("url"))), []).append(
                 d["rotulo"] + (" (informado por quem fez o vídeo)" if d.get("manual") else "")
             )
     with open(os.path.join(pasta, "notas.md"), "w", encoding="utf-8") as f:
         f.write(f"**{pedido['titulo']}**\n\n")
+        if pedido.get("livre"):
+            f.write("✍️ **Roteiro livre: texto escrito com IA, sem fonte conferida.** Só as datas e os números listados abaixo foram conferidos.\n\n")
         f.write(f"Duração: {relogio + FONTES_SEG:.0f} s · voz: {voz}\n\n### Fontes dos dados\n\n")
         for (fonte, url), rotulos in fontes.items():
             f.write(f"- [{fonte}]({url}): {', '.join(rotulos)}\n" if url else f"- {fonte}: {', '.join(rotulos)}\n")
-        f.write("\nArquivos: `video.mp4` (com narração), `video-sem-audio.mp4`, `narracao.mp3`, `legendas.srt`.\n")
+        if not fontes:
+            f.write("- nenhuma (sem dados conferidos)\n")
+        f.write("\nArquivos: `video.mp4` (com narração), `video-sem-audio.mp4`, `narracao.mp3`, `legendas.srt`, ")
+        f.write("`capa.jpg` e `post.txt` (texto pronto para postar).\n")
+    with open(os.path.join(pasta, "post.txt"), "w", encoding="utf-8") as f:
+        f.write(texto_do_post(pedido, fontes))
     print(f"Narração pronta: {relogio + FONTES_SEG:.1f} s no total")
 
 

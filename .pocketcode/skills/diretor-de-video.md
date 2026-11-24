@@ -23,8 +23,21 @@ Pense como quem edita um vídeo curto de rede social, não como quem faz slides.
 | `mapa` | estados (cada dado com `uf`, ex. "CE") | `dados` |
 | `icones` | porcentagem ("38 em cada 100") | `dado` com unidade `%` |
 | `texto` | frase de impacto ou conclusão | `texto` |
+| `linhaTempo` | acontecimentos em ordem (2 a 6), sem gráfico | `eventos`: `[{"dado": "id de um ano", "texto": "o que aconteceu"}]` |
+| `lista` | dicas, curiosidades, um Top 5 em texto (2 a 6) | `itens`: textos curtos |
 
 Em `dados` e `dado` vão só os ids da tabela, como texto (`"dados": ["pop2010", "pop2022"]`), nunca o dado inteiro.
+
+## Anos
+- Ano é um dado com `"unidade": "ano"` (ex.: `{"id": "a1904", "valor": 1904, "unidade": "ano", ...}`). Ele aparece sem ponto (1904).
+- Ano **não** é valor de gráfico: nada de `linha`, `barras`, `comparacao`, `ranking` ou `numero` com anos. Use `linhaTempo`.
+- Para evolução no tempo de um número (população por ano), o valor é o número e o ano vai no campo `x` do dado.
+
+## Roteiro livre e kit para postar
+- `"livre": true` = curiosidades, dicas e histórias sem estatística. Só entram dados informados pela pessoa (`"manual": true`)
+  e anos conferidos na Wikipédia. A tela final avisa: "Texto escrito com IA, sem fonte conferida".
+- `"post": {"texto": "...", "hashtags": ["#tema"]}` vira o `post.txt` do Release (com as fontes), junto com a `capa.jpg`.
+  Os números do texto do post também são conferidos.
 
 ## Movimento
 - `transicao` de cada cena: `corte` (rápido, para impacto), `zoom` (revelar número), `deslizar` (passar para o próximo assunto), `subir` (conclusão). Varie.

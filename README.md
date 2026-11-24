@@ -26,6 +26,8 @@ Vídeos curtos com **dados públicos** (IBGE, Banco Central, Banco Mundial…), 
 | `narracao.mp3` | só a voz, separada |
 | `legendas.srt` | legendas frase por frase |
 | `trilha.mp3` | só a música (quando o pedido tem trilha) |
+| `capa.jpg` | foto da abertura, sem legenda (kit para postar) |
+| `post.txt` | texto pronto para postar: texto, fontes e hashtags |
 
 ## Como o repositório é organizado
 
@@ -52,12 +54,15 @@ Veja `videos/exemplo/pedido.json`. Resumo:
   Um dado pode ser uma conta com outros dados: `"calculo": "(pop2022 - pop2010) / pop2010 * 100"`.
   Um dado que você mesmo informou (a IA não achou nas fontes) leva `"manual": true`: o link fica opcional,
   mas fonte e data continuam obrigatórias, e a tela final avisa "informado por quem fez o vídeo".
-- `cenas`: `titulo`, `numero`, `comparacao` (2 dados), `ranking` (3 a 10), `barras` (2 a 8), `linha` (evolução),
+- `cenas`: `titulo`, `numero`, `comparacao` (2 dados), `ranking` (3 a 10), `barras` (2 a 8), `linha` (evolução), `linhaTempo` (2 a 6 eventos com um dado de `"unidade": "ano"`, sem gráfico), `lista` (2 a 6 itens de texto),
   `mapa` (estados, dado com `uf`), `icones` (porcentagem em 100 bonequinhos) e `texto`. Toda cena tem `narracao`.
   Opcionais por cena: `transicao` (`corte`, `zoom`, `deslizar`, `subir`) e `imagem` (`fundo-1.jpg`, em `videos/<nome>/fundos/`).
 - `musica`: `animada`, `calma` ou `nenhuma`. A trilha é gerada nota por nota (`scripts/musica.py`), sem direito autoral,
   e abaixa sozinha quando a voz fala.
 - `legenda`: `true` (padrão) mostra a legenda animada, com a palavra falada acesa.
+- `livre`: `true` = roteiro livre (sem estatística): só dados informados por você ou anos da Wikipédia, e a tela final avisa que o texto foi escrito com IA, sem fonte conferida.
+- `post`: `{"texto", "hashtags"}` para o kit de postar (os números do texto também são conferidos).
+- Ano é um dado com `"unidade": "ano"`: aparece sem ponto e só na `linhaTempo` (nunca como valor de gráfico).
 
 Veja também `.pocketcode/skills/diretor-de-video.md` (como dar ritmo de vídeo ao roteiro).
 

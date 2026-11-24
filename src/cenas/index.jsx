@@ -2,12 +2,12 @@
 // As animações dos números começam quando a voz chega ao número (momentoNumero), para imagem e fala andarem juntas.
 import brasil from '@svg-maps/brazil';
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
-import { COR, comUnidade, curto, formata } from '../estilo.js';
+import { COR, comUnidade, curto, ehAno, formata, urlBonita } from '../estilo.js';
 import { Cabeca, momentoNumero, Palco, Rodape, Sobe, useEntrada, useU, useVertical } from '../base.jsx';
 
 const lista = (cena, dados) => (cena.dados || []).map(id => dados[id]).filter(Boolean);
 const rotulo = d => d.rotuloCurto || d.rotulo;
-const valorCurto = d => (d.unidade === '%' || d.unidade === 'R$' ? comUnidade(d) : curto(d.valor));
+const valorCurto = d => (d.unidade === '%' || d.unidade === 'R$' || ehAno(d) ? comUnidade(d) : curto(d.valor));
 
 /** Valor que sobe do zero até o número, começando no quadro "inicio". */
 const useConta = (alvo, inicio) => {
@@ -346,6 +346,134 @@ export const Linha = ({ cena, dados }) => {
   );
 };
 
+/** Momento (em quadros) em que a narração fala cada item: procura a 1ª palavra marcante do item na fala.
+    Sem achar, distribui os itens ao longo da cena. */
+const momentosDosItens = (cena, textos, fps, dur) => {
+  const pal = (cena.palavras || []).map(p => [p[0], String(p[2]).toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')]);
+  const base = Math.round(dur * 0.12);
+  const passo = Math.max(6, Math.round((dur * 0.7) / Math.max(1, textos.length)));
+  let ultimo = -1;
+  return textos.map((t, i) => {
+    const chaves = String(t || '')
+      .toLowerCase()
+      .split(/\s+/)
+      .map(w => w.replace(/[^\p{L}\p{N}]/gu, ''))
+      .filter(w => w.length >= 4 || /^\d+$/.test(w));
+    const achou = pal.find(p => p[0] * fps > ultimo && chaves.includes(p[1]));
+    const q = achou ? Math.round(achou[0] * fps) - 4 : base + i * passo;
+    ultimo = Math.max(ultimo, q);
+    return Math.max(0, q);
+  });
+};
+
+/** Linha do tempo: os anos entram um a um, ligados por uma linha, cada um com o que aconteceu (sem gráfico de valor). */
+export const LinhaTempo = ({ cena, dados }) => {
+  const u = useU();
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+  const ev = (cena.eventos || []).filter(x => x && dados[x.dado]);
+  const ms = momentosDosItens(cena, ev.map(x => `${Math.round(dados[x.dado].valor)} ${x.texto}`), fps, durationInFrames);
+  const fim = ms.length ? ms[ms.length - 1] : 0;
+  const linha = interpolate(frame, [ms[0] || 0, fim + 12], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  return (
+    <Palco>
+      <Cabeca texto={cena.titulo} />
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 34 * u, paddingLeft: 56 * u }}>
+        <div
+          style={{
+            position: 'absolute',
+            left: 17 * u,
+            top: 18 * u,
+            width: 6 * u,
+            height: `calc(${linha * 100}% - ${36 * u}px)`,
+            background: COR.borda,
+            borderRadius: 3 * u
+          }}
+        />
+        {ev.map((x, i) => {
+          const e = spring({ frame: frame - ms[i], fps, config: { damping: 16, stiffness: 160 } });
+          const ativo = frame >= ms[i] && (i === ev.length - 1 || frame < ms[i + 1]);
+          return (
+            <div key={i} style={{ position: 'relative', opacity: Math.min(1, e * 1.5), transform: `translateX(${(1 - e) * 60 * u}px)` }}>
+              <div
+                style={{
+                  position: 'absolute',
+                  left: -50 * u,
+                  top: 14 * u,
+                  width: 28 * u,
+                  height: 28 * u,
+                  borderRadius: '50%',
+                  background: ativo ? COR.destaque : COR.cartao,
+                  border: `${5 * u}px solid ${COR.destaque}`,
+                  transform: `scale(${0.6 + 0.4 * e})`
+                }}
+              />
+              <div style={{ fontSize: 64 * u, fontWeight: 800, color: COR.destaque, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+                {comUnidade(dados[x.dado])}
+              </div>
+              <div style={{ fontSize: 40 * u, lineHeight: 1.25, marginTop: 8 * u }}>{x.texto}</div>
+            </div>
+          );
+        })}
+      </div>
+      <Rodape lista={ev.map(x => dados[x.dado])} />
+    </Palco>
+  );
+};
+
+/** Lista: itens (dicas, curiosidades, um Top 5) entrando um a um quando a voz fala de cada um. */
+export const Lista = ({ cena }) => {
+  const u = useU();
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+  const itens = (cena.itens || []).filter(x => typeof x === 'string');
+  const ms = momentosDosItens(cena, itens, fps, durationInFrames);
+  return (
+    <Palco>
+      <Cabeca texto={cena.titulo} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 26 * u }}>
+        {itens.map((t, i) => {
+          const e = spring({ frame: frame - ms[i], fps, config: { damping: 16, stiffness: 160 } });
+          return (
+            <div
+              key={i}
+              style={{
+                display: 'flex',
+                gap: 24 * u,
+                alignItems: 'center',
+                opacity: Math.min(1, e * 1.5),
+                transform: `translateY(${(1 - e) * 40 * u}px)`,
+                background: COR.cartao,
+                border: `${2 * u}px solid ${COR.borda}`,
+                borderRadius: 22 * u,
+                padding: `${22 * u}px ${28 * u}px`
+              }}
+            >
+              <div
+                style={{
+                  flex: 'none',
+                  width: 64 * u,
+                  height: 64 * u,
+                  borderRadius: '50%',
+                  background: COR.barras[i % COR.barras.length],
+                  color: COR.fundo,
+                  display: 'grid',
+                  placeItems: 'center',
+                  fontSize: 36 * u,
+                  fontWeight: 800
+                }}
+              >
+                {cena.numerada === false ? '•' : i + 1}
+              </div>
+              <div style={{ fontSize: 42 * u, lineHeight: 1.25, fontWeight: 600 }}>{t}</div>
+            </div>
+          );
+        })}
+      </div>
+    </Palco>
+  );
+};
+
 export const Texto = ({ cena }) => {
   const u = useU();
   const palavras = String(cena.texto || cena.titulo || '').split(' ');
@@ -362,20 +490,37 @@ export const Texto = ({ cena }) => {
   );
 };
 
-export const Fontes = ({ dados, titulo, temMapa, musica }) => {
+export const Fontes = ({ dados, titulo, temMapa, musica, livre }) => {
   const u = useU();
   const fontes = new Map();
   for (const d of dados) {
     // contas não têm fonte própria; dados informados por quem fez o vídeo aparecem mesmo sem link
     if (!d.url && !d.manual) continue;
     const chave = `${d.fonte}|${d.url || ''}`;
-    if (!fontes.has(chave)) fontes.set(chave, { fonte: d.fonte, url: d.url || '', data: d.data, manual: !!d.manual });
+    if (!fontes.has(chave)) fontes.set(chave, { fonte: d.fonte, url: urlBonita(d.url), data: d.data, manual: !!d.manual });
   }
   return (
     <Palco>
       <Sobe>
-        <div style={{ fontSize: 64 * u, fontWeight: 800 }}>Fontes</div>
+        <div style={{ fontSize: 64 * u, fontWeight: 800 }}>{livre && !fontes.size ? 'Aviso' : 'Fontes'}</div>
       </Sobe>
+      {livre ? (
+        <Sobe atraso={4}>
+          <div
+            style={{
+              fontSize: 40 * u,
+              fontWeight: 700,
+              lineHeight: 1.3,
+              color: COR.destaque,
+              border: `${3 * u}px solid ${COR.destaque}`,
+              borderRadius: 18 * u,
+              padding: `${18 * u}px ${24 * u}px`
+            }}
+          >
+            ✍️ Texto escrito com IA, sem fonte conferida.
+          </div>
+        </Sobe>
+      ) : null}
       <Sobe atraso={6}>
         <div style={{ fontSize: 34 * u, color: COR.suave }}>{titulo}</div>
       </Sobe>
@@ -392,7 +537,11 @@ export const Fontes = ({ dados, titulo, temMapa, musica }) => {
       ))}
       <Sobe atraso={30}>
         <div style={{ fontSize: 26 * u, color: COR.suave }}>
-          Dados públicos. Números conferidos automaticamente antes do vídeo. {formata(dados.length)} dados usados.
+          {livre
+            ? fontes.size
+              ? 'Só as datas e os números acima foram conferidos (na fonte indicada ou informados por quem fez o vídeo).'
+              : 'Nenhum número ou data deste vídeo foi conferido numa fonte.'
+            : `Dados públicos. Números conferidos automaticamente antes do vídeo. ${formata(dados.length)} dados usados.`}
           {temMapa ? ' Mapa: svg-maps/brazil (CC BY 4.0).' : ''}
           {musica && musica !== 'nenhuma' ? ' Trilha gerada pelo próprio modelo.' : ''}
         </div>

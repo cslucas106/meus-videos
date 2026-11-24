@@ -118,3 +118,50 @@ test('dados da cena como objeto dão erro claro (e não "[object Object]")', () 
   assert.match(erros, /só o id do dado/);
   assert.doesNotMatch(erros, /object Object/);
 });
+
+const ano = (id, valor, url = 'https://pt.wikipedia.org/wiki/Thelema') => ({ id, rotulo: 'ano ' + valor, valor, unidade: 'ano', fonte: 'Wikipédia · Thelema', url, data: 'consultado em 2026-11' });
+const base = extra => ({ titulo: 'T', formato: 'vertical', dados: [], ...extra });
+
+test('linha do tempo: eventos com dados de ano; ano não entra em gráfico', () => {
+  const p = base({
+    dados: [ano('a1904', 1904), ano('a1920', 1920)],
+    cenas: [{ tipo: 'linhaTempo', titulo: 'x', eventos: [{ dado: 'a1904', texto: 'Livro da Lei' }, { dado: 'a1920', texto: 'Abadia em Cefalù' }], narracao: 'Em 1904 e em 1920.' }]
+  });
+  assert.deepEqual(validaPedido(p).erros, []);
+  p.cenas[0].eventos = [{ dado: 'a1904', texto: 'x' }];
+  assert.match(validaPedido(p).erros.join('\n'), /2 a 6 eventos/);
+  p.cenas[0].eventos = [{ dado: 'a1904', texto: 'x' }, { dado: 'nada', texto: 'y' }];
+  assert.match(validaPedido(p).erros.join('\n'), /"nada" não está na tabela/);
+  const g = base({ dados: [ano('a1904', 1904), ano('a1920', 1920)], cenas: [{ tipo: 'barras', dados: ['a1904', 'a1920'], narracao: 'x' }] });
+  assert.match(validaPedido(g).erros.join('\n'), /é um ano; ano não entra em barras/);
+  const n = base({ dados: [{ id: 'pop', rotulo: 'p', valor: 10, fonte: 'f', url: 'https://x.org', data: '2020' }], cenas: [{ tipo: 'linhaTempo', eventos: [{ dado: 'pop', texto: 'a' }, { dado: 'pop', texto: 'b' }], narracao: 'x' }] });
+  assert.match(validaPedido(n).erros.join('\n'), /precisa ter unidade "ano"/);
+});
+
+test('lista: 2 a 6 itens de texto, e os números dos itens também são conferidos', () => {
+  const p = base({ cenas: [{ tipo: 'lista', titulo: 'Dicas', itens: ['Beba água', 'Durma bem'], narracao: 'Duas dicas.' }] });
+  assert.deepEqual(validaPedido(p).erros, []);
+  p.cenas[0].itens.push('Ande 8000 passos');
+  assert.match(validaPedido(p).erros.join('\n'), /"8000" não está na tabela/);
+  p.cenas[0].itens = ['só um'];
+  assert.match(validaPedido(p).erros.join('\n'), /2 a 6 itens/);
+});
+
+test('roteiro livre: só dados informados pela pessoa ou anos da Wikipédia', () => {
+  const ok = base({ livre: true, dados: [ano('a1904', 1904), { id: 'meu1', rotulo: 'm', valor: 7, fonte: 'eu', data: '2026', manual: true }], cenas: [{ tipo: 'texto', texto: 'Oi', narracao: 'Em 1904.' }] });
+  assert.deepEqual(validaPedido(ok).erros, []);
+  const ruim = base({ livre: true, dados: [{ id: 'pop', rotulo: 'p', valor: 10, fonte: 'IBGE', url: 'https://ibge.gov.br', data: '2020' }, ano('a1', 1999, 'https://exemplo.com')], cenas: [{ tipo: 'texto', texto: 'Oi', narracao: 'x' }] });
+  const e = validaPedido(ruim).erros.join('\n');
+  assert.match(e, /dado 1 \(pop\): no roteiro livre/);
+  assert.match(e, /dado 2 \(a1\): no roteiro livre/);
+  assert.match(validaPedido(base({ livre: true, cenas: [{ tipo: 'texto', texto: 'Oi', narracao: 'Há 300 anos' }] })).erros.join('\n'), /"300" não está na tabela/);
+});
+
+test('post do kit: texto, hashtags e números conferidos', () => {
+  const p = base({ dados: [ano('a1904', 1904)], cenas: [{ tipo: 'texto', texto: 'x', narracao: 'x' }], post: { texto: 'Tudo começou em 1904.', hashtags: ['#história', '#Thelema'] } });
+  assert.deepEqual(validaPedido(p).erros, []);
+  p.post.texto = 'Mais de 5000 seguidores.';
+  assert.match(validaPedido(p).erros.join('\n'), /post: o número "Mais de 5000"/);
+  p.post = { texto: 'ok', hashtags: ['sem cerquilha'] };
+  assert.match(validaPedido(p).erros.join('\n'), /hashtags/);
+});

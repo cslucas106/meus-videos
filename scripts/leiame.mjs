@@ -18,6 +18,12 @@ const VOZES = {
   'pt-PT-DuarteNeural': 'Duarte'
 };
 
+/** Link legível: a API da Wikipédia (w/api.php?…titles=X) vira o artigo (wiki/X) */
+const urlBonita = u => {
+  const m = /^https:\/\/([a-z]{2,3}\.wikipedia\.org)\/w\/api\.php\?.*[?&]titles=([^&]+)/.exec(String(u || ''));
+  return m ? `https://${m[1]}/wiki/${decodeURIComponent(m[2]).replace(/ /g, '_')}` : String(u || '');
+};
+
 /** As linhas de versão que já estão no LEIAME (cada uma começa com "- [" e aponta para /releases/tag/) */
 export function versoesDe(texto) {
   return String(texto || '')
@@ -50,8 +56,9 @@ export function montaLeiame(pedido, versoes) {
     const fontes = new Map();
     for (const d of pedido.dados || []) {
       if (!d || d.calculo != null) continue;
-      const k = (d.fonte || '?') + '|' + (d.url || '');
-      if (!fontes.has(k)) fontes.set(k, { fonte: d.fonte || '?', url: d.url || '', itens: [] });
+      const url = urlBonita(d.url);
+      const k = (d.fonte || '?') + '|' + url;
+      if (!fontes.has(k)) fontes.set(k, { fonte: d.fonte || '?', url, itens: [] });
       fontes.get(k).itens.push((d.rotulo || d.id) + (d.data ? ` (${d.data})` : '') + (d.manual ? ' · informado por quem fez o vídeo' : ''));
     }
     if (fontes.size) {

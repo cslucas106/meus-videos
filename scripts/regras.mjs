@@ -4,7 +4,7 @@
 // de mandar o pedido; aqui elas rodam de novo, por garantia.
 
 export const FORMATOS = { vertical: [1080, 1920], horizontal: [1920, 1080] };
-export const TIPOS = ['titulo', 'numero', 'barras', 'linha', 'texto', 'ranking', 'comparacao', 'mapa', 'icones'];
+export const TIPOS = ['titulo', 'numero', 'barras', 'linha', 'texto', 'ranking', 'comparacao', 'mapa', 'icones', 'linhaTempo', 'lista'];
 export const TRANSICOES = ['deslizar', 'zoom', 'subir', 'corte'];
 export const MUSICAS = ['calma', 'animada', 'nenhuma'];
 export const UFS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ');
@@ -20,6 +20,13 @@ export const VOZES = [
 export const MAX_CENAS = 24;
 export const MAX_DADOS = 40;
 export const MAX_NARRACAO = 600;
+export const MAX_ITENS = 6; // eventos da linha do tempo e itens da lista
+export const MAX_ITEM = 120; // letras de cada evento/item
+export const MAX_POST = 700; // letras do texto do post (kit para postar)
+
+/** Dado que é um ano (unidade "ano"): aparece sem ponto (1904) e só na linha do tempo, nunca como valor de gráfico. */
+export const ehAno = d => !!d && /^anos?$/i.test(String(d.unidade || '').trim());
+const naWikipedia = u => /^https:\/\/[a-z]{2,3}\.wikipedia\.org\//.test(String(u || ''));
 
 const MULT = { mil: 1e3, milhao: 1e6, milhoes: 1e6, bilhao: 1e9, bilhoes: 1e9, trilhao: 1e12, trilhoes: 1e12 };
 const semAcento = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -204,6 +211,16 @@ export function validaPedido(p) {
   if (p.musica != null && !MUSICAS.includes(p.musica)) e(`musica deve ser ${MUSICAS.join(', ')}`);
   if (p.legenda != null && typeof p.legenda !== 'boolean') e('legenda deve ser true ou false');
 
+  if (p.livre != null && typeof p.livre !== 'boolean') e('livre deve ser true ou false');
+  if (p.post != null) {
+    if (!p.post || typeof p.post !== 'object' || typeof p.post.texto !== 'string' || !p.post.texto.trim())
+      e('post: falta o texto do post');
+    else if (p.post.texto.length > MAX_POST) e(`post: texto longo demais (máx. ${MAX_POST} letras)`);
+    const h = p.post && p.post.hashtags;
+    if (h != null && (!Array.isArray(h) || h.length > 10 || h.some(x => typeof x !== 'string' || !/^#[\p{L}\p{N}_]{2,40}$/u.test(x))))
+      e('post: hashtags são até 10, no formato #palavra (sem espaço)');
+  }
+
   const dados = Array.isArray(p.dados) ? p.dados : [];
   if (!Array.isArray(p.dados)) e('falta a tabela de dados (pode ser vazia)');
   if (dados.length > MAX_DADOS) e(`no máximo ${MAX_DADOS} dados`);
@@ -232,6 +249,9 @@ export function validaPedido(p) {
     } else if (!d.url || !/^https:\/\//.test(d.url)) {
       e(`${onde}: falta o link https da fonte`);
     }
+    // roteiro livre: a IA não buscou fontes; só valem dados informados pela pessoa e anos conferidos na Wikipédia
+    if (p.livre && !d.manual && d.calculo == null && !(ehAno(d) && naWikipedia(d.url)))
+      e(`${onde}: no roteiro livre só entram dados informados por você ou anos conferidos na Wikipédia`);
     valores[d.id] = d.valor;
     prontos.push(d);
   }
@@ -259,6 +279,32 @@ export function validaPedido(p) {
     if (c.fundo != null && (typeof c.fundo !== 'string' || c.fundo.length > 300))
       e(`${onde}: a descrição da imagem de fundo deve ter até 300 letras`);
     const porId = Object.fromEntries(prontos.map(d => [d.id, d]));
+    if (c.tipo === 'linhaTempo') {
+      const ev = Array.isArray(c.eventos) ? c.eventos : [];
+      if (ev.length < 2 || ev.length > MAX_ITENS) e(`${onde}: linhaTempo precisa de 2 a ${MAX_ITENS} eventos`);
+      for (const [k, x] of ev.entries()) {
+        const q = `${onde}, evento ${k + 1}`;
+        if (!x || typeof x !== 'object') {
+          e(`${q}: cada evento é {"dado": "id do ano", "texto": "o que aconteceu"}`);
+          continue;
+        }
+        if (typeof x.dado !== 'string' || !porId[x.dado])
+          e(`${q}: o dado "${x.dado}" não está na tabela (cada evento usa um dado com unidade "ano")`);
+        else if (!ehAno(porId[x.dado])) e(`${q}: o dado "${x.dado}" precisa ter unidade "ano"`);
+        if (typeof x.texto !== 'string' || !x.texto.trim() || x.texto.length > MAX_ITEM)
+          e(`${q}: o texto precisa ter de 1 a ${MAX_ITEM} letras`);
+      }
+    }
+    if (c.tipo === 'lista') {
+      const it = Array.isArray(c.itens) ? c.itens : [];
+      if (it.length < 2 || it.length > MAX_ITENS) e(`${onde}: lista precisa de 2 a ${MAX_ITENS} itens`);
+      if (it.some(x => typeof x !== 'string' || !x.trim() || x.length > MAX_ITEM))
+        e(`${onde}: cada item da lista é um texto de 1 a ${MAX_ITEM} letras`);
+    }
+    // ano não é valor de gráfico ("1.900" numa barra não faz sentido): ano vai na linhaTempo
+    for (const id of usa || [])
+      if (typeof id === 'string' && ehAno(porId[id]))
+        e(`${onde}: o dado "${id}" é um ano; ano não entra em ${c.tipo} (use a cena linhaTempo)`);
     if (c.tipo === 'mapa')
       for (const id of c.dados || [])
         if (porId[id] && !UFS.includes(String(porId[id].uf || '').toUpperCase()))
@@ -272,8 +318,16 @@ export function validaPedido(p) {
       if (id && typeof id !== 'string')
         e(`${onde}: em "dados"/"dado" vai só o id do dado (texto, ex. "pop2022"), não um objeto`);
       else if (id && !(id in valores)) e(`${onde}: o dado "${id}" não está na tabela`);
-    for (const campo of ['narracao', 'titulo', 'subtitulo', 'texto']) {
-      for (const n of numerosDoTexto(c[campo])) {
+    const textos = [
+      c.narracao,
+      c.titulo,
+      c.subtitulo,
+      c.texto,
+      ...(Array.isArray(c.itens) ? c.itens : []),
+      ...(Array.isArray(c.eventos) ? c.eventos.map(x => x && x.texto) : [])
+    ];
+    for (const t of textos) {
+      for (const n of numerosDoTexto(typeof t === 'string' ? t : '')) {
         if (!bateComTabela(n, prontos))
           e(
             n.limite
@@ -283,5 +337,9 @@ export function validaPedido(p) {
       }
     }
   }
+  if (p.post && typeof p.post.texto === 'string')
+    for (const n of numerosDoTexto(p.post.texto))
+      if (!bateComTabela(n, prontos))
+        e(`post: o número "${n.texto}" não está na tabela de dados`);
   return { erros, dados: prontos };
 }
