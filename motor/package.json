@@ -7,7 +7,7 @@
     "verificar": "node scripts/verifica.mjs",
     "testar": "node --test tests/*.test.mjs",
     "estudio": "remotion studio src/index.jsx",
-    "render": "remotion render src/index.jsx Video out/sem-audio.mp4 --props=out/props.json"
+    "render": "remotion render src/index.jsx Video out/video-sem-audio.mp4 --props=out/props.json"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
