@@ -6,7 +6,7 @@ import vm from 'node:vm';
 import { FORMATOS } from './regras.mjs';
 import { PARAMS, argumentos, montaApi } from '../src/animacao.js';
 
-const TEMPO = 500; // ms por quadro
+const TEMPO = 2000; // ms por quadro (folga para o GitHub Actions, que às vezes é lento; laços já são proibidos pelas regras)
 const MOMENTOS = [0, 0.25, 0.5, 0.75, 1];
 
 /** Roda o código em 5 momentos; lança erro com o motivo se algo der errado */
