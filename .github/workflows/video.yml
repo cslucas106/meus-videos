@@ -73,12 +73,12 @@ jobs:
           # app antigo (antes da 1.7.0) ainda grava em pedidos/<nome>.json
           [ -f "$ARQ" ] || ARQ="pedidos/$PEDIDO.json"
           node scripts/verifica.mjs "$ARQ" out/pedido.json
-          # imagens de fundo do pedido (videos/<nome>/fundos/fundo-N.jpg), se houver
+          # imagens de fundo do pedido (videos/<nome>/fundos/fundo-N.jpg) e fotos do Commons que o app já baixou (foto-N.jpg), se houver
           mkdir -p public/fundos
           for d in "videos/$PEDIDO/fundos" "pedidos/$PEDIDO"; do
-            [ -d "$d" ] && cp "$d"/fundo-* public/fundos/ 2>/dev/null || true
+            [ -d "$d" ] && cp "$d"/fundo-* "$d"/foto-* public/fundos/ 2>/dev/null || true
           done
-          # fotos do Wikimedia Commons (cena.foto): baixadas aqui, com o crédito guardado no pedido
+          # fotos do Wikimedia Commons (cena.foto) que o app não mandou: baixadas aqui, com o crédito guardado no pedido
           node scripts/fotos.mjs out/pedido.json public/fundos
           # mapa de municípios (dados com "mun"): contorno das malhas do IBGE, guardado na própria cena
           node scripts/malhas.mjs out/pedido.json
