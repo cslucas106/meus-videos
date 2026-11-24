@@ -67,6 +67,12 @@ export function montaLeiame(pedido, versoes) {
         l.push(`- ${f.url ? `[${f.fonte}](${f.url})` : f.fonte}: ${f.itens.join('; ')}`);
       l.push('');
     }
+    const fotos = [...new Map((pedido.cenas || []).filter(c => c && c.foto).map(c => [c.foto.pagina, c.foto])).values()];
+    if (fotos.length) {
+      l.push('## Fotos (Wikimedia Commons)', '');
+      for (const f of fotos) l.push(`- [${f.autor}](${f.pagina}) · ${f.licenca}`);
+      l.push('');
+    }
   }
   l.push('## Versões publicadas', '');
   if (versoes.length) l.push(...versoes);

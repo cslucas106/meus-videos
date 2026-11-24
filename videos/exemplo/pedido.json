@@ -6,6 +6,8 @@
   "velocidade": "+0%",
   "musica": "animada",
   "legenda": true,
+  "tema": "neon",
+  "efeitos": true,
   "dados": [
     {
       "id": "fort2022",

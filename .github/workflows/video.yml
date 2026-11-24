@@ -71,6 +71,8 @@ jobs:
           for d in "videos/$PEDIDO/fundos" "pedidos/$PEDIDO"; do
             [ -d "$d" ] && cp "$d"/fundo-* public/fundos/ 2>/dev/null || true
           done
+          # fotos do Wikimedia Commons (cena.foto): baixadas aqui, com o crédito guardado no pedido
+          node scripts/fotos.mjs out/pedido.json public/fundos
 
       - name: 2/4 Gera a narração
         run: python scripts/narrar.py out/pedido.json out

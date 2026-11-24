@@ -23,6 +23,23 @@ export const MAX_NARRACAO = 600;
 export const MAX_ITENS = 6; // eventos da linha do tempo e itens da lista
 export const MAX_ITEM = 120; // letras de cada evento/item
 export const MAX_POST = 700; // letras do texto do post (kit para postar)
+export const TEMAS = ['escuro', 'neon', 'jornal', 'natureza', 'pop'];
+export const MAX_FOTOS = 6;
+/** Foto do Wikimedia Commons (o workflow baixa e põe o crédito na cena e no fim do vídeo) */
+export function fotoValida(f) {
+  return (
+    !!f &&
+    typeof f === 'object' &&
+    /^https:\/\/upload\.wikimedia\.org\/[^\s"'<>]+$/.test(String(f.url || '')) &&
+    /^https:\/\/commons\.wikimedia\.org\/[^\s"'<>]+$/.test(String(f.pagina || '')) &&
+    typeof f.autor === 'string' &&
+    !!f.autor.trim() &&
+    f.autor.length <= 200 &&
+    typeof f.licenca === 'string' &&
+    /^(cc0|cc[ -]by|public domain|pd\b|domínio público)/i.test(f.licenca.trim()) &&
+    f.licenca.length <= 60
+  );
+}
 
 /** Dado que é um ano (unidade "ano"): aparece sem ponto (1904) e só na linha do tempo, nunca como valor de gráfico. */
 export const ehAno = d => !!d && /^anos?$/i.test(String(d.unidade || '').trim());
@@ -212,6 +229,10 @@ export function validaPedido(p) {
   if (p.legenda != null && typeof p.legenda !== 'boolean') e('legenda deve ser true ou false');
 
   if (p.livre != null && typeof p.livre !== 'boolean') e('livre deve ser true ou false');
+  if (p.tema != null && !TEMAS.includes(p.tema)) e(`tema deve ser ${TEMAS.join(', ')}`);
+  if (p.efeitos != null && typeof p.efeitos !== 'boolean') e('efeitos deve ser true ou false');
+  if (Array.isArray(p.cenas) && p.cenas.filter(c => c && c.foto != null).length > MAX_FOTOS)
+    e(`no máximo ${MAX_FOTOS} fotos`);
   if (p.post != null) {
     if (!p.post || typeof p.post !== 'object' || typeof p.post.texto !== 'string' || !p.post.texto.trim())
       e('post: falta o texto do post');
@@ -275,10 +296,12 @@ export function validaPedido(p) {
       );
     if (c.transicao != null && !TRANSICOES.includes(c.transicao))
       e(`${onde}: transição "${c.transicao}" não existe (use ${TRANSICOES.join(', ')})`);
-    if (c.imagem != null && !/^fundo-\d{1,2}\.(jpg|png)$/.test(String(c.imagem))) e(`${onde}: nome de imagem inválido`);
+    if (c.imagem != null && !/^(fundo|foto)-\d{1,2}\.(jpg|png)$/.test(String(c.imagem))) e(`${onde}: nome de imagem inválido`);
     if (c.fundo != null && (typeof c.fundo !== 'string' || c.fundo.length > 300))
       e(`${onde}: a descrição da imagem de fundo deve ter até 300 letras`);
     const porId = Object.fromEntries(prontos.map(d => [d.id, d]));
+    if (c.foto != null && !fotoValida(c.foto))
+      e(`${onde}: foto inválida (precisa do Wikimedia Commons, com autor, licença livre e página)`);
     if (c.tipo === 'linhaTempo') {
       const ev = Array.isArray(c.eventos) ? c.eventos : [];
       if (ev.length < 2 || ev.length > MAX_ITENS) e(`${onde}: linhaTempo precisa de 2 a ${MAX_ITENS} eventos`);

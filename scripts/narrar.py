@@ -134,6 +134,17 @@ def url_bonita(u):
     return f"https://{m.group(1)}/wiki/{urllib.parse.unquote(m.group(2)).replace(' ', '_')}" if m else (u or "")
 
 
+def fotos_do_pedido(pedido):
+    """Fotos do Commons que entraram no vídeo (uma vez cada), para o crédito."""
+    vistas, out = set(), []
+    for c in pedido.get("cenas", []):
+        ft = c.get("foto")
+        if ft and c.get("imagem") and ft.get("pagina") not in vistas:
+            vistas.add(ft.get("pagina"))
+            out.append(ft)
+    return out
+
+
 def texto_do_post(pedido, fontes):
     """Kit para postar: o texto do post (escrito pela IA e conferido), as fontes e as hashtags, pronto para copiar."""
     post = pedido.get("post") or {}
@@ -142,6 +153,9 @@ def texto_do_post(pedido, fontes):
         partes.append("✍️ Texto escrito com IA, sem fonte conferida.")
     if fontes:
         partes.append("Fontes: " + "; ".join(sorted({fonte for (fonte, _url) in fontes})))
+    fotos = fotos_do_pedido(pedido)
+    if fotos:
+        partes.append("Fotos: " + "; ".join(f"{ft['autor']} ({ft['licenca']})" for ft in fotos) + ", via Wikimedia Commons")
     tags = [t for t in (post.get("hashtags") or []) if isinstance(t, str) and t.startswith("#")]
     if tags:
         partes.append(" ".join(tags))
@@ -215,6 +229,11 @@ async def principal(entrada, pasta):
             f.write(f"- [{fonte}]({url}): {', '.join(rotulos)}\n" if url else f"- {fonte}: {', '.join(rotulos)}\n")
         if not fontes:
             f.write("- nenhuma (sem dados conferidos)\n")
+        fotos = fotos_do_pedido(pedido)
+        if fotos:
+            f.write("\n### Fotos (Wikimedia Commons)\n\n")
+            for ft in fotos:
+                f.write(f"- [{ft['autor']}]({ft['pagina']}) · {ft['licenca']}\n")
         f.write("\nArquivos: `video.mp4` (com narração), `video-sem-audio.mp4`, `narracao.mp3`, `legendas.srt`, ")
         f.write("`capa.jpg` e `post.txt` (texto pronto para postar).\n")
     with open(os.path.join(pasta, "post.txt"), "w", encoding="utf-8") as f:

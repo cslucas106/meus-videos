@@ -64,9 +64,11 @@ export const Legenda = ({ palavras }) => {
               lineHeight: 1.15,
               padding: `${2 * u}px ${12 * u}px`,
               borderRadius: 14 * u,
-              color: falando ? '#0b0f17' : dita ? COR.texto : '#cbd5e1',
+              color: falando ? (COR.claro ? '#fff' : '#0b0f17') : dita ? COR.texto : COR.claro ? COR.suave : '#cbd5e1',
               background: falando ? COR.destaque : 'transparent',
-              textShadow: falando ? 'none' : `0 ${4 * u}px ${18 * u}px rgba(0,0,0,.85)`,
+              textShadow: falando
+                ? 'none'
+                : `0 ${4 * u}px ${18 * u}px ${COR.claro ? 'rgba(255,255,255,.9)' : 'rgba(0,0,0,.85)'}`,
               textTransform: 'uppercase'
             }}
           >

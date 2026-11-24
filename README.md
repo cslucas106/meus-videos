@@ -62,6 +62,9 @@ Veja `videos/exemplo/pedido.json`. Resumo:
 - `legenda`: `true` (padrão) mostra a legenda animada, com a palavra falada acesa.
 - `livre`: `true` = roteiro livre (sem estatística): só dados informados por você ou anos da Wikipédia, e a tela final avisa que o texto foi escrito com IA, sem fonte conferida.
 - `post`: `{"texto", "hashtags"}` para o kit de postar (os números do texto também são conferidos).
+- `tema`: `escuro` (padrão), `neon`, `jornal` (claro, com serifa), `natureza` ou `pop`: cores e fonte do vídeo (`src/estilo.js`).
+- `efeitos`: `true` (padrão) põe efeitos sonoros gerados na hora (`scripts/efeitos.py`): whoosh nas transições, pop nos itens, tic-tic na contagem dos números.
+- `foto` numa cena: `{"url", "pagina", "autor", "licenca"}` de uma foto do **Wikimedia Commons** com licença livre (CC0, domínio público, CC BY, CC BY-SA). O workflow baixa a foto (`scripts/fotos.mjs`) e o crédito aparece na cena, na tela de fontes, nas notas do Release e no `post.txt`.
 - Ano é um dado com `"unidade": "ano"`: aparece sem ponto e só na `linhaTempo` (nunca como valor de gráfico).
 
 Veja também `.pocketcode/skills/diretor-de-video.md` (como dar ritmo de vídeo ao roteiro).

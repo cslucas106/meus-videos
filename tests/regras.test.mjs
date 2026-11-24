@@ -165,3 +165,24 @@ test('post do kit: texto, hashtags e números conferidos', () => {
   p.post = { texto: 'ok', hashtags: ['sem cerquilha'] };
   assert.match(validaPedido(p).erros.join('\n'), /hashtags/);
 });
+
+test('tema, efeitos e foto do Wikimedia Commons (com crédito)', () => {
+  const foto = {
+    url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/X.jpg/1280px-X.jpg',
+    pagina: 'https://commons.wikimedia.org/wiki/File:X.jpg',
+    autor: 'Fulano',
+    licenca: 'CC BY-SA 4.0'
+  };
+  const p = base({ tema: 'neon', efeitos: true, cenas: [{ tipo: 'texto', texto: 'Oi', narracao: 'Oi', foto }] });
+  assert.deepEqual(validaPedido(p).erros, []);
+  p.tema = 'rosa';
+  assert.match(validaPedido(p).erros.join('\n'), /tema deve ser/);
+  p.tema = 'escuro';
+  p.cenas[0].foto = { ...foto, url: 'https://evil.com/x.jpg' };
+  assert.match(validaPedido(p).erros.join('\n'), /foto inválida/);
+  p.cenas[0].foto = { ...foto, licenca: 'Fair use' };
+  assert.match(validaPedido(p).erros.join('\n'), /foto inválida/);
+  p.cenas[0].foto = foto;
+  p.cenas[0].imagem = 'foto-1.jpg';
+  assert.deepEqual(validaPedido(p).erros, []);
+});

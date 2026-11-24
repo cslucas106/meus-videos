@@ -33,6 +33,11 @@ Em `dados` e `dado` vão só os ids da tabela, como texto (`"dados": ["pop2010",
 - Ano **não** é valor de gráfico: nada de `linha`, `barras`, `comparacao`, `ranking` ou `numero` com anos. Use `linhaTempo`.
 - Para evolução no tempo de um número (população por ano), o valor é o número e o ano vai no campo `x` do dado.
 
+## Visual e som
+- `tema`: `escuro`, `neon`, `jornal`, `natureza` ou `pop` (cores e fonte). `efeitos`: `true`/`false` (whoosh, pop, tic).
+- Foto real: `"foto": {"url": "https://upload.wikimedia.org/…", "pagina": "https://commons.wikimedia.org/wiki/File:…", "autor", "licenca"}`.
+  Só licenças livres (CC0, domínio público, CC BY, CC BY-SA); o crédito entra sozinho. Prefira lugares, objetos e natureza; evite pessoas vivas.
+
 ## Roteiro livre e kit para postar
 - `"livre": true` = curiosidades, dicas e histórias sem estatística. Só entram dados informados pela pessoa (`"manual": true`)
   e anos conferidos na Wikipédia. A tela final avisa: "Texto escrito com IA, sem fonte conferida".

@@ -6,6 +6,31 @@ import { Legenda } from './Legenda.jsx';
 
 export const TRANSICOES = ['deslizar', 'zoom', 'subir', 'corte'];
 
+/** Crédito da foto do Wikimedia Commons, pequeno, no pé da tela (abaixo da legenda) */
+const Credito = ({ foto }) => {
+  const { width, height } = useVideoConfig();
+  const u = Math.min(width, height) / 1080;
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: 40 * u,
+        right: 40 * u,
+        bottom: 26 * u,
+        fontSize: 22 * u,
+        color: '#fff',
+        opacity: 0.85,
+        textShadow: '0 1px 3px #000',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }}
+    >
+      Foto: {foto.autor} · {foto.licenca} · Wikimedia Commons
+    </div>
+  );
+};
+
 const Fundo = ({ imagem, indice }) => {
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
@@ -61,6 +86,7 @@ export const Cena = ({ cena, indice, legenda, children }) => {
         {children}
       </AbsoluteFill>
       {comLegenda ? <Legenda palavras={cena.palavras} /> : null}
+      {cena.imagem && cena.foto ? <Credito foto={cena.foto} /> : null}
       {flash ? <AbsoluteFill style={{ background: '#fff', opacity: flash }} /> : null}
     </AbsoluteFill>
   );

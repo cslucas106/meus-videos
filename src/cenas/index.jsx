@@ -490,7 +490,7 @@ export const Texto = ({ cena }) => {
   );
 };
 
-export const Fontes = ({ dados, titulo, temMapa, musica, livre }) => {
+export const Fontes = ({ dados, titulo, temMapa, musica, livre, fotos = [] }) => {
   const u = useU();
   const fontes = new Map();
   for (const d of dados) {
@@ -535,6 +535,14 @@ export const Fontes = ({ dados, titulo, temMapa, musica, livre }) => {
           </div>
         </Sobe>
       ))}
+      {fotos.length ? (
+        <Sobe atraso={24}>
+          <div style={{ fontSize: 26 * u, color: COR.suave, lineHeight: 1.35 }}>
+            <b style={{ color: COR.texto }}>Fotos (Wikimedia Commons):</b>{' '}
+            {[...new Map(fotos.map(f => [f.pagina, f])).values()].map(f => `${f.autor} (${f.licenca})`).join(' · ')}
+          </div>
+        </Sobe>
+      ) : null}
       <Sobe atraso={30}>
         <div style={{ fontSize: 26 * u, color: COR.suave }}>
           {livre
