@@ -11,7 +11,7 @@ const calcula = ({ props }) => {
   const [width, height] = TAMANHO[props.formato] || TAMANHO.vertical;
   const fps = props.fps || FPS;
   const cenas = props.cenas.reduce((t, c) => t + (c.frames || 4 * fps), 0);
-  return { width, height, fps, durationInFrames: cenas + (props.fontesFrames || 5 * fps) };
+  return { width, height, fps, durationInFrames: Math.max(1, cenas + (props.fontesFrames ?? 5 * fps)) };
 };
 
 export const Root = () => (

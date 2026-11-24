@@ -6,7 +6,11 @@
 export const FORMATOS = { vertical: [1080, 1920], horizontal: [1920, 1080] };
 export const TIPOS = ['titulo', 'numero', 'barras', 'linha', 'texto', 'ranking', 'comparacao', 'mapa', 'icones', 'linhaTempo', 'lista', 'animacao'];
 export const TRANSICOES = ['deslizar', 'zoom', 'subir', 'corte'];
-export const MUSICAS = ['calma', 'animada', 'nenhuma'];
+export const MUSICAS = ['calma', 'animada', 'lofi', 'epica', 'suspense', 'alegre', 'eletronica', 'nenhuma'];
+/** Estilos de legenda (legenda: true = 'animada', false = sem legenda) */
+export const LEGENDAS = ['animada', 'simples', 'grande', 'caixa'];
+/** Estilos de efeitos sonoros (efeitos: true = 'completo', false = sem efeitos) */
+export const EFEITOS = ['completo', 'suave', 'transicoes', 'arcade'];
 export const UFS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ');
 // Mapa de municípios: no máximo 30 cidades pintadas, todas do mesmo estado (o contorno vem das malhas do IBGE)
 export const MAX_MUNICIPIOS = 30;
@@ -401,11 +405,17 @@ export function validaPedido(p) {
   if (p.voz && !VOZES.includes(p.voz)) e(`voz desconhecida: ${p.voz}`);
   if (p.velocidade && !/^[+-]\d{1,2}%$/.test(p.velocidade)) e('velocidade deve ser tipo "+10%" ou "-5%"');
   if (p.musica != null && !MUSICAS.includes(p.musica)) e(`musica deve ser ${MUSICAS.join(', ')}`);
-  if (p.legenda != null && typeof p.legenda !== 'boolean') e('legenda deve ser true ou false');
+  if (p.legenda != null && typeof p.legenda !== 'boolean' && !LEGENDAS.includes(p.legenda))
+    e(`legenda deve ser true, false ou ${LEGENDAS.join(', ')}`);
+  if (p.musicaVolume != null && !(Number.isInteger(p.musicaVolume) && p.musicaVolume >= 0 && p.musicaVolume <= 100))
+    e('musicaVolume deve ser um número inteiro de 0 a 100');
+  for (const k of ['falarFontes', 'mostrarFontes', 'avisoIA'])
+    if (p[k] != null && typeof p[k] !== 'boolean') e(`${k} deve ser true ou false`);
 
   if (p.livre != null && typeof p.livre !== 'boolean') e('livre deve ser true ou false');
   if (p.tema != null && !TEMAS.includes(p.tema)) e(`tema deve ser ${TEMAS.join(', ')}`);
-  if (p.efeitos != null && typeof p.efeitos !== 'boolean') e('efeitos deve ser true ou false');
+  if (p.efeitos != null && typeof p.efeitos !== 'boolean' && !EFEITOS.includes(p.efeitos))
+    e(`efeitos deve ser true, false ou ${EFEITOS.join(', ')}`);
   if (Array.isArray(p.cenas) && p.cenas.filter(c => c && c.tipo === 'animacao').length > MAX_ANIMACOES)
     e(`no máximo ${MAX_ANIMACOES} cenas de animação por vídeo`);
   if (Array.isArray(p.cenas) && p.cenas.filter(c => c && c.foto != null).length > MAX_FOTOS)

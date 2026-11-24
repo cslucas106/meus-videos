@@ -22,8 +22,8 @@ export function quadros(props) {
     ini += dur;
     return q;
   });
-  const fontes = props.fontesFrames || 5 * fps;
-  l.push({ n: l.length + 1, tipo: 'fontes', arquivo: 'fontes.jpg', quadro: ini + Math.min(fontes - 1, Math.round(2.5 * fps)), inicio: +(ini / fps).toFixed(2), fim: +((ini + fontes) / fps).toFixed(2) });
+  const fontes = props.fontesFrames ?? 5 * fps;
+  if (fontes > 0) l.push({ n: l.length + 1, tipo: 'fontes', arquivo: 'fontes.jpg', quadro: ini + Math.min(fontes - 1, Math.round(2.5 * fps)), inicio: +(ini / fps).toFixed(2), fim: +((ini + fontes) / fps).toFixed(2) });
   return l;
 }
 

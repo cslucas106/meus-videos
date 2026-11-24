@@ -186,3 +186,19 @@ test('tema, efeitos e foto do Wikimedia Commons (com crédito)', () => {
   p.cenas[0].imagem = 'foto-1.jpg';
   assert.deepEqual(validaPedido(p).erros, []);
 });
+
+test('opções novas: estilos de legenda e efeitos, volume da trilha, trilhas novas e a tela final', () => {
+  const base = JSON.parse(readFileSync(new URL('../videos/exemplo/pedido.json', import.meta.url), 'utf8'));
+  const ok = x => assert.deepEqual(validaPedido({ ...base, ...x }).erros, [], JSON.stringify(x));
+  const mal = (x, re) => assert.ok(validaPedido({ ...base, ...x }).erros.some(m => re.test(m)), JSON.stringify(x));
+  for (const legenda of [true, false, 'animada', 'simples', 'grande', 'caixa']) ok({ legenda });
+  for (const efeitos of [true, false, 'completo', 'suave', 'transicoes', 'arcade']) ok({ efeitos });
+  for (const musica of ['lofi', 'epica', 'suspense', 'alegre', 'eletronica']) ok({ musica });
+  ok({ musicaVolume: 0, falarFontes: true, mostrarFontes: false, avisoIA: false });
+  ok({ musicaVolume: 100 });
+  mal({ legenda: 'piscando' }, /legenda/);
+  mal({ efeitos: 'trovão' }, /efeitos/);
+  mal({ musicaVolume: 101 }, /musicaVolume/);
+  mal({ musicaVolume: '50' }, /musicaVolume/);
+  mal({ mostrarFontes: 'não' }, /mostrarFontes/);
+});

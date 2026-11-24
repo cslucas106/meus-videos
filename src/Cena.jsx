@@ -85,7 +85,7 @@ export const Cena = ({ cena, indice, legenda, children }) => {
       <AbsoluteFill style={{ transform: mov, opacity: (indice === 0 || tipo === 'corte' ? 1 : Math.min(1, e * 1.6)) * saida }}>
         {children}
       </AbsoluteFill>
-      {comLegenda ? <Legenda palavras={cena.palavras} /> : null}
+      {comLegenda ? <Legenda palavras={cena.palavras} estilo={legenda} /> : null}
       {cena.imagem && cena.foto ? <Credito foto={cena.foto} /> : null}
       {flash ? <AbsoluteFill style={{ background: '#fff', opacity: flash }} /> : null}
     </AbsoluteFill>

@@ -151,3 +151,10 @@ test('animação no pedido: precisa de título, no máximo 2 por vídeo, código
   ruim.cenas[0].codigo = 'return window';
   assert.match(validaPedido(ruim).erros.join(' '), /cena 1 \(animação\): não use "window"/);
 });
+
+test('storyboard: sem tela final (fontesFrames 0) não tira foto das fontes', () => {
+  const l = quadros({ fps: 30, fontesFrames: 0, cenas: [{ tipo: 'texto', frames: 60 }] });
+  assert.equal(l.length, 1);
+  assert.equal(l[0].tipo, 'texto');
+  assert.equal(quadros({ fps: 30, cenas: [{ tipo: 'texto', frames: 60 }] }).at(-1).tipo, 'fontes');
+});

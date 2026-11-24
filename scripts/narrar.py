@@ -28,7 +28,7 @@ import sys
 FPS = 30
 PAUSA = 0.35  # segundos de respiro depois de cada fala (pouco, para o vídeo ter ritmo)
 MIN_CENA = 2.0  # nenhuma cena fica menor que isso
-FONTES_SEG = 5  # tela final com as fontes, sem voz
+FONTES_SEG = 5  # tela final com as fontes (sem voz; com falarFontes, o tempo da fala, se for maior)
 VOZ_PADRAO = "pt-BR-FranciscaNeural"
 
 
@@ -145,12 +145,43 @@ def fotos_do_pedido(pedido):
     return out
 
 
+def nomes_das_fontes(pedido):
+    """Instituições das fontes (o que vem antes do "·": "IBGE · Censo 2022" -> IBGE), uma vez cada, na ordem da tabela,
+    para falar no fim do vídeo."""
+    vistos = []
+    for d in pedido.get("dados", []):
+        if (d.get("url") or d.get("manual")) and d.get("fonte"):
+            nome = re.split(r"\s*·\s*", str(d["fonte"]).strip())[0]
+            if nome not in vistos:
+                vistos.append(nome)
+    return vistos
+
+
+def tem_tela_final(pedido):
+    """A tela final existe se mostra as fontes ou, no roteiro livre, o aviso de IA."""
+    return pedido.get("mostrarFontes") is not False or (bool(pedido.get("livre")) and pedido.get("avisoIA") is not False)
+
+
+def fala_final(pedido):
+    """O que a voz diz na tela final (falarFontes): o aviso de IA (roteiro livre) e as fontes. Vazio = tela sem voz."""
+    if not pedido.get("falarFontes") or not tem_tela_final(pedido):
+        return ""
+    partes = []
+    if pedido.get("livre") and pedido.get("avisoIA") is not False:
+        partes.append("Texto escrito com inteligência artificial.")
+    nomes = nomes_das_fontes(pedido) if pedido.get("mostrarFontes") is not False else []
+    if nomes:
+        lista = nomes[0] if len(nomes) == 1 else ", ".join(nomes[:-1]) + " e " + nomes[-1]
+        partes.append(f"Fontes: {lista}.")
+    return " ".join(partes)
+
+
 def texto_do_post(pedido, fontes):
     """Kit para postar: o texto do post (escrito pela IA e conferido), as fontes e as hashtags, pronto para copiar."""
     post = pedido.get("post") or {}
     partes = [str(post.get("texto") or pedido.get("titulo") or "").strip()]
-    if pedido.get("livre"):
-        partes.append("✍️ Texto escrito com IA, sem fonte conferida.")
+    if pedido.get("livre") and pedido.get("avisoIA") is not False:
+        partes.append("✍️ Texto escrito com IA, sem fonte conferida." if not fontes else "✍️ Texto escrito com IA; só as datas e os números foram conferidos.")
     if fontes:
         partes.append("Fontes: " + "; ".join(sorted({fonte for (fonte, _url) in fontes})))
     fotos = fotos_do_pedido(pedido)
@@ -198,9 +229,21 @@ async def principal(entrada, pasta):
             print(f"Aviso: a cena {i + 1} veio sem o tempo das palavras; ela fica sem legenda animada.")
         relogio += exato
 
-    final = os.path.join(tmp, "fontes.wav")
-    silencio(final, FONTES_SEG)
-    partes.append(final)
+    # tela final: fontes e/ou aviso de IA (com falarFontes, a voz lê); sem nenhuma das duas, o vídeo acaba na última cena
+    fontes_seg = 0.0
+    if tem_tela_final(pedido):
+        final = os.path.join(tmp, "fontes.wav")
+        texto_final = fala_final(pedido)
+        if texto_final:
+            mp3 = os.path.join(tmp, "fontes.mp3")
+            await fala(texto_final, voz, velocidade, mp3)
+            fontes_seg = math.ceil(max(FONTES_SEG, duracao(mp3) + 0.8) * FPS) / FPS
+            roda("ffmpeg", "-y", "-i", mp3, "-af", f"apad=whole_dur={fontes_seg:.3f}", "-t", f"{fontes_seg:.3f}", "-ar", "24000", "-ac", "1", final)
+            print(f"Tela final com voz: {texto_final} ({fontes_seg:.1f}s)")
+        else:
+            fontes_seg = float(FONTES_SEG)
+            silencio(final, FONTES_SEG)
+        partes.append(final)
 
     lista = os.path.join(tmp, "lista.txt")
     with open(lista, "w", encoding="utf-8") as f:
@@ -210,7 +253,7 @@ async def principal(entrada, pasta):
 
     grava_srt(pasta, legendas)
 
-    props = {**pedido, "voz": voz, "fps": FPS, "cenas": cenas, "fontesFrames": FONTES_SEG * FPS}
+    props = {**pedido, "voz": voz, "fps": FPS, "cenas": cenas, "fontesFrames": round(fontes_seg * FPS)}
     with open(os.path.join(pasta, "props.json"), "w", encoding="utf-8") as f:
         json.dump(props, f, ensure_ascii=False, indent=2)
 
@@ -224,7 +267,7 @@ async def principal(entrada, pasta):
         f.write(f"**{pedido['titulo']}**\n\n")
         if pedido.get("livre"):
             f.write("✍️ **Roteiro livre: texto escrito com IA, sem fonte conferida.** Só as datas e os números listados abaixo foram conferidos.\n\n")
-        f.write(f"Duração: {relogio + FONTES_SEG:.0f} s · voz: {voz}\n\n### Fontes dos dados\n\n")
+        f.write(f"Duração: {relogio + fontes_seg:.0f} s · voz: {voz}\n\n### Fontes dos dados\n\n")
         for (fonte, url), rotulos in fontes.items():
             f.write(f"- [{fonte}]({url}): {', '.join(rotulos)}\n" if url else f"- {fonte}: {', '.join(rotulos)}\n")
         if not fontes:
@@ -234,11 +277,13 @@ async def principal(entrada, pasta):
             f.write("\n### Fotos (Wikimedia Commons)\n\n")
             for ft in fotos:
                 f.write(f"- [{ft['autor']}]({ft['pagina']}) · {ft['licenca']}\n")
-        f.write("\nArquivos: `video.mp4` (com narração), `video-sem-audio.mp4`, `narracao.mp3`, `legendas.srt`, ")
-        f.write("`capa.jpg` e `post.txt` (texto pronto para postar).\n")
-    with open(os.path.join(pasta, "post.txt"), "w", encoding="utf-8") as f:
-        f.write(texto_do_post(pedido, fontes))
-    print(f"Narração pronta: {relogio + FONTES_SEG:.1f} s no total")
+        f.write("\nArquivos: `video.mp4` (com narração), `video-sem-audio.mp4`, `narracao.mp3`, `legendas.srt`")
+        f.write(", `capa.jpg` e `post.txt` (texto pronto para postar).\n" if pedido.get("post") else " e `capa.jpg`.\n")
+    # kit para postar: só quando o pedido tem post (a pessoa pode desligar o post e as hashtags no app)
+    if pedido.get("post"):
+        with open(os.path.join(pasta, "post.txt"), "w", encoding="utf-8") as f:
+            f.write(texto_do_post(pedido, fontes))
+    print(f"Narração pronta: {relogio + fontes_seg:.1f} s no total")
 
 
 if __name__ == "__main__":

@@ -4,10 +4,10 @@
   "formato": "vertical",
   "voz": "pt-BR-FranciscaNeural",
   "velocidade": "+0%",
-  "musica": "animada",
-  "legenda": true,
+  "musica": "lofi",
+  "legenda": "caixa",
   "tema": "neon",
-  "efeitos": true,
+  "efeitos": "arcade",
   "dados": [
     {
       "id": "fort2022",
@@ -174,5 +174,7 @@
       "#IBGE",
       "#dados"
     ]
-  }
+  },
+  "musicaVolume": 60,
+  "falarFontes": true
 }

@@ -81,7 +81,8 @@ export const Video = props => {
   const { fps } = useVideoConfig();
   const tema = aplicaTema(props.tema); // antes de desenhar as cenas: todas leem as cores de COR
   const dados = Object.fromEntries((props.dados || []).map(d => [d.id, d]));
-  const legenda = props.legenda !== false;
+  const legenda = props.legenda === false ? false : props.legenda; // true/undefined = animada, ou o nome do estilo
+  const fontesFrames = props.fontesFrames ?? 5 * fps;
   let inicio = 0;
   const partes = props.cenas.map((c, i) => {
     const dur = c.frames || 4 * fps;
@@ -100,6 +101,7 @@ export const Video = props => {
     <AbsoluteFill style={{ background: COR.fundo, color: COR.texto, fontFamily: `'${tema.fonte}', Inter, sans-serif` }}>
       <FundoVivo />
       {partes}
+      {fontesFrames > 0 ? (
       <Sequence from={inicio} name="fontes">
         <Cena cena={{ tipo: 'fontes', transicao: 'subir' }} indice={1} legenda={false}>
           <Fontes
@@ -109,10 +111,13 @@ export const Video = props => {
             temMalha={props.cenas.some(c => c.tipo === 'mapa' && c.malha)}
             musica={props.musica}
             livre={!!props.livre}
+            mostrarFontes={props.mostrarFontes !== false}
+            avisoIA={props.avisoIA !== false}
             fotos={props.cenas.filter(c => c.foto && c.imagem).map(c => c.foto)}
           />
         </Cena>
       </Sequence>
+      ) : null}
       <Progresso />
     </AbsoluteFill>
   );

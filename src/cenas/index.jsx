@@ -509,7 +509,9 @@ export const Texto = ({ cena }) => {
   );
 };
 
-export const Fontes = ({ dados, titulo, temMapa, temMalha, musica, livre, fotos = [] }) => {
+/* Tela final: as fontes (mostrarFontes) e, no roteiro livre, o aviso de texto escrito com IA (avisoIA). O narrar.py só cria a tela
+   quando uma das duas vale; sem nenhuma, o vídeo termina na última cena. */
+export const Fontes = ({ dados, titulo, temMapa, temMalha, musica, livre, fotos = [], mostrarFontes = true, avisoIA = true }) => {
   const u = useU();
   const fontes = new Map();
   for (const d of dados) {
@@ -521,9 +523,9 @@ export const Fontes = ({ dados, titulo, temMapa, temMalha, musica, livre, fotos 
   return (
     <Palco>
       <Sobe>
-        <div style={{ fontSize: 64 * u, fontWeight: 800 }}>{livre && !fontes.size ? 'Aviso' : 'Fontes'}</div>
+        <div style={{ fontSize: 64 * u, fontWeight: 800 }}>{!mostrarFontes || (livre && !fontes.size) ? 'Aviso' : 'Fontes'}</div>
       </Sobe>
-      {livre ? (
+      {livre && avisoIA ? (
         <Sobe atraso={4}>
           <div
             style={{
@@ -536,10 +538,16 @@ export const Fontes = ({ dados, titulo, temMapa, temMalha, musica, livre, fotos 
               padding: `${18 * u}px ${24 * u}px`
             }}
           >
-            ✍️ Texto escrito com IA, sem fonte conferida.
+            {fontes.size && mostrarFontes
+              ? '✍️ Texto escrito com IA. Só as datas e os números abaixo foram conferidos.'
+              : fontes.size
+                ? '✍️ Texto escrito com IA. Só as datas e os números foram conferidos.'
+                : '✍️ Texto escrito com IA, sem fonte conferida.'}
           </div>
         </Sobe>
       ) : null}
+      {mostrarFontes ? (
+        <>
       <Sobe atraso={6}>
         <div style={{ fontSize: 34 * u, color: COR.suave }}>{titulo}</div>
       </Sobe>
@@ -574,6 +582,8 @@ export const Fontes = ({ dados, titulo, temMapa, temMalha, musica, livre, fotos 
           {musica && musica !== 'nenhuma' ? ' Trilha gerada pelo próprio modelo.' : ''}
         </div>
       </Sobe>
+        </>
+      ) : null}
     </Palco>
   );
 };

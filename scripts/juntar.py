@@ -24,13 +24,26 @@ def duracao(arq):
     return float(r.stdout.strip())
 
 
-def filtro_mistura(com_musica, com_efeitos):
+VOLUME_PADRAO = 50  # % do volume da trilha (musicaVolume no pedido)
+
+
+def ganho_trilha(volume):
+    """musicaVolume (0 a 100) -> ganho da trilha antes de abaixar na voz. 50% = 0,30 (antes era fixo em 0,20, e abaixava muito)."""
+    try:
+        v = max(0, min(100, int(volume)))
+    except (TypeError, ValueError):
+        v = VOLUME_PADRAO
+    return round(0.6 * v / 100, 3)
+
+
+def filtro_mistura(com_musica, com_efeitos, ganho=None):
     """Monta o filtro do ffmpeg. Entradas: 0 = voz, depois a trilha (se houver) e os efeitos (se houver).
-    A música fica baixa e abaixa mais quando a voz fala (sidechain); os efeitos ficam por cima, baixinhos; a voz manda."""
+    A música fica no volume escolhido e abaixa um pouco quando a voz fala (sidechain); os efeitos ficam por cima, baixinhos; a voz manda."""
+    ganho = ganho_trilha(VOLUME_PADRAO) if ganho is None else ganho
     partes, mistura, k = ["[0:a]aresample=44100,asplit=2[v1][v2]"], ["[v2]"], 1
     if com_musica:
-        partes.append(f"[{k}:a]aresample=44100,volume=0.20[m]")
-        partes.append("[m][v1]sidechaincompress=threshold=0.02:ratio=8:attack=20:release=400[md]")
+        partes.append(f"[{k}:a]aresample=44100,volume={ganho}[m]")
+        partes.append("[m][v1]sidechaincompress=threshold=0.03:ratio=4:attack=20:release=400[md]")
         mistura.append("[md]")
         k += 1
     else:
@@ -49,7 +62,7 @@ def principal(pasta):
     imagem = os.path.join(pasta, "video-sem-audio.mp4")
     saida = os.path.join(pasta, "video.mp4")
     estilo = props.get("musica") or "nenhuma"
-    com_efeitos = props.get("efeitos") is not False
+    com_efeitos = bool(props.get("efeitos", True))  # true ou o nome do estilo (completo, suave, transicoes, arcade)
     entradas, temporarios = ["-i", voz], []
     if estilo != "nenhuma":
         trilha_wav = os.path.join(pasta, "trilha.wav")
@@ -73,13 +86,14 @@ def principal(pasta):
     n_audio = len(entradas) // 2
     roda(
         "ffmpeg", "-y", *entradas, "-i", imagem,
-        "-filter_complex", filtro_mistura(estilo != "nenhuma", com_efeitos),
+        "-filter_complex", filtro_mistura(estilo != "nenhuma", com_efeitos, ganho_trilha(props.get("musicaVolume", VOLUME_PADRAO))),
         "-map", f"{n_audio}:v", "-map", "[a]",
         "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-shortest", saida,
     )
     for t in temporarios:
         os.remove(t)
-    print(f"Vídeo pronto ({'trilha ' + estilo if estilo != 'nenhuma' else 'sem música'}{', com efeitos' if com_efeitos else ''})")
+    vol = props.get("musicaVolume", VOLUME_PADRAO)
+    print(f"Vídeo pronto ({'trilha ' + estilo + f' a {vol}%' if estilo != 'nenhuma' else 'sem música'}{', com efeitos' if com_efeitos else ''})")
 
 
 if __name__ == "__main__":
