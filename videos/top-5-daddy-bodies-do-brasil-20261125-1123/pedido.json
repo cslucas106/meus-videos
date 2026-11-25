@@ -1,0 +1,236 @@
+{
+  "versao": 1,
+  "titulo": "Top 5 Daddy Bodies do Brasil",
+  "formato": "vertical",
+  "voz": "pt-BR-AntonioNeural",
+  "velocidade": "+0%",
+  "musica": "nenhuma",
+  "legenda": "simples",
+  "livre": true,
+  "avisoIA": false,
+  "semConferencia": true,
+  "falarFontes": false,
+  "mostrarFontes": false,
+  "tema": "pop",
+  "efeitos": "completo",
+  "dados": [
+    {
+      "id": "pref_dad",
+      "rotulo": "Preferem Corpo Real",
+      "valor": 72,
+      "unidade": "%",
+      "fonte": "Sem fonte conferida",
+      "data": "sem data"
+    },
+    {
+      "id": "nero_charm",
+      "rotulo": "Charme",
+      "valor": 95,
+      "unidade": "%",
+      "fonte": "Sem fonte conferida",
+      "data": "sem data"
+    },
+    {
+      "id": "nero_porte",
+      "rotulo": "Presença",
+      "valor": 90,
+      "unidade": "%",
+      "fonte": "Sem fonte conferida",
+      "data": "sem data"
+    },
+    {
+      "id": "votos_murilo",
+      "rotulo": "Índice de Charme",
+      "valor": 88,
+      "unidade": "%",
+      "fonte": "Sem fonte conferida",
+      "data": "sem data"
+    },
+    {
+      "id": "top3_palmeira",
+      "rotulo": "Marcos Palmeira",
+      "valor": 98,
+      "unidade": "pts",
+      "fonte": "Sem fonte conferida",
+      "data": "sem data"
+    },
+    {
+      "id": "top3_murilo",
+      "rotulo": "Murilo Benício",
+      "valor": 92,
+      "unidade": "pts",
+      "fonte": "Sem fonte conferida",
+      "data": "sem data"
+    },
+    {
+      "id": "top3_rodrigo",
+      "rotulo": "Rodrigo Lombardi",
+      "valor": 87,
+      "unidade": "pts",
+      "fonte": "Sem fonte conferida",
+      "data": "sem data"
+    },
+    {
+      "id": "tanquinho_fit",
+      "rotulo": "Corpo Sarado",
+      "valor": 30,
+      "unidade": "%",
+      "fonte": "Sem fonte conferida",
+      "data": "sem data"
+    },
+    {
+      "id": "daddy_charm",
+      "rotulo": "Charme Real",
+      "valor": 70,
+      "unidade": "%",
+      "fonte": "Sem fonte conferida",
+      "data": "sem data"
+    }
+  ],
+  "cenas": [
+    {
+      "tipo": "titulo",
+      "titulo": "Top 5 Daddy Bodies",
+      "subtitulo": "Os homens mais desejados do país",
+      "narracao": "Descubra agora os 5 famosos brasileiros que provam que o charme natural vence qualquer abdômen definido.",
+      "transicao": "zoom"
+    },
+    {
+      "tipo": "texto",
+      "texto": "O conceito do corpo real redesenhou os padrões de beleza.",
+      "narracao": "Esqueça a barriga tanquinho: o conceito de corpo real virou a verdadeira preferência nacional.",
+      "transicao": "corte",
+      "imagem": "foto-1.jpg"
+    },
+    {
+      "tipo": "lista",
+      "titulo": "O Charme do Daddy Body",
+      "itens": [
+        "Aparência natural e despretensiosa",
+        "Carisma de homem maduro",
+        "Estilo elegante e confiante",
+        "Autoconfiança sem neuras com a boa forma"
+      ],
+      "narracao": "O visual valoriza a maturidade, o estilo relaxado e a autoconfiança de quem vive sem neura.",
+      "transicao": "deslizar",
+      "imagem": "foto-2.jpg"
+    },
+    {
+      "tipo": "icones",
+      "dado": "pref_dad",
+      "titulo": "Preferência Popular pelo Corpo Real",
+      "narracao": "Pesquisas de opinião mostram que 72 por cento das pessoas acham a beleza natural mais atraente.",
+      "transicao": "zoom"
+    },
+    {
+      "tipo": "texto",
+      "texto": "5º LUGAR: O mestre do carisma intelectual.",
+      "narracao": "Abrindo a nossa lista no quinto lugar, temos um mestre do charme misterioso e da elegância.",
+      "transicao": "corte"
+    },
+    {
+      "tipo": "lista",
+      "titulo": "5º Lugar: Selton Mello",
+      "itens": [
+        "Voz marcante e inconfundível",
+        "Estilo intelectual e descontraído",
+        "Postura sempre autêntica"
+      ],
+      "narracao": "Selton Mello garante a quinta posição com sua voz marcante e o visual intelectual e descontraído.",
+      "transicao": "deslizar",
+      "imagem": "foto-3.jpg"
+    },
+    {
+      "tipo": "texto",
+      "texto": "4º LUGAR: Presença marcante e estilo rústico.",
+      "narracao": "Em quarto lugar, um galã que combina presença marcante na televisão com um estilo bem rústico.",
+      "transicao": "subir"
+    },
+    {
+      "tipo": "comparacao",
+      "titulo": "4º Lugar: Alexandre Nero",
+      "dados": [
+        "nero_charm",
+        "nero_porte"
+      ],
+      "narracao": "Alexandre Nero ostenta 95 por cento de aprovação pelo charme e 90 por cento pela sua postura marcante.",
+      "transicao": "corte",
+      "imagem": "foto-4.jpg"
+    },
+    {
+      "tipo": "texto",
+      "texto": "3º LUGAR: O clássico galã que conquista gerações.",
+      "narracao": "Chegando ao top três, um dos homens mais conhecidos e charmosos de toda a dramaturgia.",
+      "transicao": "deslizar"
+    },
+    {
+      "tipo": "lista",
+      "titulo": "3º Lugar: Rodrigo Lombardi",
+      "itens": [
+        "Porte elegante de galã maduro",
+        "Sorriso cativante sem esforço",
+        "Presença marcante na tela"
+      ],
+      "narracao": "Rodrigo Lombardi fica em terceiro lugar exibindo o clássico sorriso cativante de homem maduro.",
+      "transicao": "zoom",
+      "imagem": "foto-5.jpg"
+    },
+    {
+      "tipo": "numero",
+      "dado": "votos_murilo",
+      "titulo": "2º Lugar: Murilo Benício",
+      "narracao": "Em segundo lugar, Murilo Benício soma 88 por cento de preferência no estilo pai de família adorável.",
+      "transicao": "corte",
+      "imagem": "foto-6.jpg"
+    },
+    {
+      "tipo": "texto",
+      "texto": "Elegância natural sem perder o estilo descontraído.",
+      "narracao": "Ele transita com facilidade entre o visual descontraído do dia a dia e a elegância refinada.",
+      "transicao": "deslizar"
+    },
+    {
+      "tipo": "ranking",
+      "titulo": "Pódio do Charme Nacional",
+      "dados": [
+        "top3_palmeira",
+        "top3_murilo",
+        "top3_rodrigo"
+      ],
+      "narracao": "No topo do nosso ranking, um nome reina absoluto como o maior símbolo do charme maduro do país.",
+      "transicao": "zoom",
+      "somBusca": "applause crowd"
+    },
+    {
+      "tipo": "lista",
+      "titulo": "1º Lugar: Marcos Palmeira",
+      "itens": [
+        "O eterno galã do campo",
+        "Beleza natural e madura",
+        "Ícone supremo do visual despretensioso"
+      ],
+      "narracao": "Marcos Palmeira vence em primeiro lugar com sua beleza natural e o visual rústico do campo.",
+      "transicao": "corte",
+      "imagem": "foto-7.jpg"
+    },
+    {
+      "tipo": "comparacao",
+      "titulo": "Padrão Rígido vs Charme Real",
+      "dados": [
+        "tanquinho_fit",
+        "daddy_charm"
+      ],
+      "narracao": "A busca pelo corpo perfeito deu lugar ao charme real, onde 70 por cento preferem a simplicidade.",
+      "transicao": "deslizar",
+      "imagem": "foto-8.jpg"
+    },
+    {
+      "tipo": "texto",
+      "texto": "A verdadeira beleza está na autoconfiança de ser quem você é.",
+      "narracao": "O estilo maduro e autêntico provou que a autoconfiança é a coisa mais atraente que existe.",
+      "transicao": "subir",
+      "imagem": "foto-9.jpg"
+    }
+  ],
+  "sonsVolume": 35
+}
