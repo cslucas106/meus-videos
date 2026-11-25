@@ -1,8 +1,6 @@
-// Regras que todo pedido de vídeo precisa cumprir antes de virar vídeo.
-// A ideia central: nenhum número aparece no vídeo se não estiver na tabela
-// de dados, com fonte e data. O PocketCode AI roda as mesmas regras antes
-// de mandar o pedido (cópia em js/video-regras.js); aqui elas rodam de novo, por garantia.
-// Se mudar aqui, mude lá também: o teste do PocketCode compara as duas cópias.
+/* Regras do pedido de vídeo (original). O app PocketCode AI tem uma CÓPIA em js/video-regras.js.
+   Se mudar aqui, mude lá também: o teste tests/regras-copia.test.mjs do app compara as duas cópias.
+   Nenhum número entra no vídeo sem estar na tabela de dados, com fonte e data, EXCETO nos pedidos com "semConferencia": true. */
 
 export const FORMATOS = { vertical: [1080, 1920], horizontal: [1920, 1080] };
 export const TIPOS = [
@@ -567,6 +565,10 @@ export function validaPedido(p) {
     if (p[k] != null && typeof p[k] !== 'boolean') e(`${k} deve ser true ou false`);
 
   if (p.livre != null && typeof p.livre !== 'boolean') e('livre deve ser true ou false');
+  if (p.semConferencia != null && typeof p.semConferencia !== 'boolean')
+    e('semConferencia deve ser true ou false');
+  // sem conferência: a pessoa escolheu não ter fonte nem checagem de números (o vídeo avisa no final, se o aviso estiver ligado)
+  const semConf = p.semConferencia === true;
   if (p.tema != null && !TEMAS.includes(p.tema)) e(`tema deve ser ${TEMAS.join(', ')}`);
   if (p.efeitos != null && typeof p.efeitos !== 'boolean' && !EFEITOS.includes(p.efeitos))
     e(`efeitos deve ser true, false ou ${EFEITOS.join(', ')}`);
@@ -613,8 +615,8 @@ export function validaPedido(p) {
     }
     if (d.id in valores) e(`${onde}: id repetido`);
     if (!d.rotulo) e(`${onde}: falta o rótulo`);
-    if (!d.fonte) e(`${onde}: falta a fonte`);
-    if (!d.data) e(`${onde}: falta a data do dado`);
+    if (!d.fonte && !semConf) e(`${onde}: falta a fonte`);
+    if (!d.data && !semConf) e(`${onde}: falta a data do dado`);
     if (d.calculo != null) {
       try {
         const r = calcula(d.calculo, valores);
@@ -628,6 +630,9 @@ export function validaPedido(p) {
     } else if (typeof d.valor !== 'number' || !Number.isFinite(d.valor)) {
       e(`${onde}: o valor precisa ser um número`);
       continue;
+    } else if (semConf) {
+      // sem conferência: o link é opcional, mas se vier tem de ser https
+      if (d.url && !/^https:\/\//.test(d.url)) e(`${onde}: o link precisa começar com https://`);
     } else if (d.manual) {
       // dado informado pela pessoa: o link é opcional, mas se vier tem de ser https
       if (d.url && !/^https:\/\//.test(d.url)) e(`${onde}: o link precisa começar com https://`);
@@ -635,7 +640,7 @@ export function validaPedido(p) {
       e(`${onde}: falta o link https da fonte`);
     }
     // roteiro livre: a IA não buscou fontes; só valem dados informados pela pessoa e anos conferidos na Wikipédia
-    if (p.livre && !d.manual && d.calculo == null && !(ehAno(d) && naWikipedia(d.url)))
+    if (p.livre && !semConf && !d.manual && d.calculo == null && !(ehAno(d) && naWikipedia(d.url)))
       e(
         `${onde}: no roteiro livre só entram dados informados por você ou anos conferidos na Wikipédia`
       );
@@ -772,7 +777,7 @@ export function validaPedido(p) {
       ...(Array.isArray(c.itens) ? c.itens : []),
       ...(Array.isArray(c.eventos) ? c.eventos.map(x => x && x.texto) : [])
     ];
-    for (const t of textos) {
+    for (const t of semConf ? [] : textos) {
       for (const n of numerosDoTexto(typeof t === 'string' ? t : '')) {
         if (!bateComTabela(n, prontos))
           e(
@@ -783,7 +788,7 @@ export function validaPedido(p) {
       }
     }
   }
-  if (p.post && typeof p.post.texto === 'string')
+  if (!semConf && p.post && typeof p.post.texto === 'string')
     for (const n of numerosDoTexto(p.post.texto))
       if (!bateComTabela(n, prontos)) e(`post: o número "${n.texto}" não está na tabela de dados`);
   return { erros, dados: prontos };
